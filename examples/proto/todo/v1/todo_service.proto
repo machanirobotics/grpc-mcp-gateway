@@ -1,0 +1,62 @@
+syntax = "proto3";
+
+package todo.v1;
+
+option go_package = "github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1";
+option java_multiple_files = true;
+option java_outer_classname = "TodoServiceProto";
+option java_package = "com.todo.v1";
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+
+import "todo/v1/todo.proto";
+
+// Service for managing todo items.
+service TodoService {
+  option (google.api.default_host) = "machanirobotics.app.todo.v1";
+
+  // Creates a new todo item.
+  rpc CreateTodo(CreateTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      post: "/v1/{parent=users/*}/todos"
+      body: "todo"
+    };
+    option (google.api.method_signature) = "parent,todo,todo_id";
+  }
+  
+  // Retrieves a todo item by resource name.
+  rpc GetTodo(GetTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      get: "/v1/{name=users/*/todos/*}"
+    };
+    option (google.api.method_signature) = "name";
+  }
+  
+  // Lists todo items with optional filtering.
+  rpc ListTodos(ListTodosRequest) returns (ListTodosResponse) {
+    option (google.api.http) = {
+      get: "/v1/{parent=users/*}/todos"
+    };
+    option (google.api.method_signature) = "parent";
+  }
+  
+  // Updates an existing todo item.
+  rpc UpdateTodo(UpdateTodoRequest) returns (Todo) {
+    option (google.api.http) = {
+      patch: "/v1/{todo.name=users/*/todos/*}"
+      body: "todo"
+    };
+    option (google.api.method_signature) = "todo,update_mask";
+  }
+  
+  // Deletes a todo item by resource name.
+  rpc DeleteTodo(DeleteTodoRequest) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      delete: "/v1/{name=users/*/todos/*}"
+    };
+    option (google.api.method_signature) = "name";
+  }
+}

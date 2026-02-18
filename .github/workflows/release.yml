@@ -1,0 +1,135 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build & Release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Validate tag matches semver
+        run: |
+          TAG="${GITHUB_REF#refs/tags/}"
+          if ! echo "$TAG" | grep -qE '^v[0-9]+\.[0-9]+\.[0-9]+'; then
+            echo "Tag $TAG does not match semver pattern v*.*.*"
+            exit 1
+          fi
+          echo "VERSION=$TAG" >> "$GITHUB_ENV"
+
+      - name: Run tests
+        run: go test -race ./cmd/... ./pkg/...
+
+      - name: Build binaries
+        run: |
+          mkdir -p dist
+          platforms=(
+            "linux/amd64"
+            "linux/arm64"
+            "darwin/amd64"
+            "darwin/arm64"
+            "windows/amd64"
+            "windows/arm64"
+          )
+          for platform in "${platforms[@]}"; do
+            GOOS="${platform%/*}"
+            GOARCH="${platform#*/}"
+            ext=""
+            if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
+            output="protoc-gen-mcp-${VERSION}-${GOOS}-${GOARCH}${ext}"
+            echo "Building $output..."
+            GOOS=$GOOS GOARCH=$GOARCH go build -trimpath \
+              -ldflags "-s -w -X main.version=${VERSION}" \
+              -o "dist/${output}" \
+              ./cmd/protoc-gen-mcp/
+          done
+
+      - name: Create archives
+        run: |
+          cd dist
+          for f in protoc-gen-mcp-*; do
+            if echo "$f" | grep -q windows; then
+              zip "${f%.*}.zip" "$f"
+            else
+              tar czf "${f}.tar.gz" "$f"
+            fi
+          done
+          # Generate checksums
+          sha256sum *.tar.gz *.zip > checksums.txt
+          cat checksums.txt
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-version:refname | grep -E '^v' | sed -n '2p')
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"%s|%h" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"%s|%h" "${PREV_TAG}..HEAD")
+          fi
+
+          NEW="" UPDATED="" FIXED="" OTHER=""
+          while IFS='|' read -r msg hash; do
+            [ -z "$msg" ] && continue
+            lower=$(echo "$msg" | tr '[:upper:]' '[:lower:]')
+            case "$lower" in
+              feat:*|feat\(*|add:*|add\ *)   NEW="${NEW}- ${msg} (\`${hash}\`)\n" ;;
+              fix:*|fix\(*|bug:*|bugfix:*)    FIXED="${FIXED}- ${msg} (\`${hash}\`)\n" ;;
+              refactor:*|refactor\(*|chore:*|chore\(*|docs:*|docs\(*|ci:*|ci\(*|style:*|perf:*|build:*)
+                                              UPDATED="${UPDATED}- ${msg} (\`${hash}\`)\n" ;;
+              *)                              OTHER="${OTHER}- ${msg} (\`${hash}\`)\n" ;;
+            esac
+          done <<< "$COMMITS"
+
+          {
+            echo "CHANGELOG<<EOF"
+            [ -n "$NEW" ]     && printf "#### New\n${NEW}\n"
+            [ -n "$UPDATED" ] && printf "#### Updated\n${UPDATED}\n"
+            [ -n "$FIXED" ]   && printf "#### Bug Fixes\n${FIXED}\n"
+            [ -n "$OTHER" ]   && printf "#### Other\n${OTHER}\n"
+            [ -z "$NEW$UPDATED$FIXED$OTHER" ] && echo "Initial release"
+            echo "EOF"
+          } >> "$GITHUB_OUTPUT"
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ env.VERSION }}
+          body: |
+            ## protoc-mcp-gen ${{ env.VERSION }}
+
+            ### Installation
+
+            **Go install:**
+            ```bash
+            go install github.com/machanirobotics/protoc-mcp-gen/cmd/protoc-gen-mcp@${{ env.VERSION }}
+            ```
+
+            **Download binary:**
+            Download the archive for your platform below, extract it, and place `protoc-gen-mcp` in your `$PATH`.
+
+            ### Checksums
+            See `checksums.txt` for SHA-256 hashes of all archives.
+
+            ### Changes
+            ${{ steps.changelog.outputs.CHANGELOG }}
+          files: |
+            dist/*.tar.gz
+            dist/*.zip
+            dist/checksums.txt
+          generate_release_notes: false
+          draft: false
+          prerelease: false

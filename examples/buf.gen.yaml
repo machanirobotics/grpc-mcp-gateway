@@ -1,0 +1,36 @@
+version: v2
+plugins:
+  # --- Go ---
+  - local: protoc-gen-go
+    out: proto/generated/go
+    opt:
+      - module=github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go
+  - local: protoc-gen-go-grpc
+    out: proto/generated/go
+    opt:
+      - module=github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go
+  - local: protoc-gen-mcp
+    out: proto/generated/go
+    opt:
+      - lang=go
+      - module=github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go
+  # --- Python ---
+  - remote: buf.build/protocolbuffers/python
+    out: proto/generated/python
+  - remote: buf.build/grpc/python
+    out: proto/generated/python
+  - local: protoc-gen-mcp
+    out: proto/generated/python
+    opt:
+      - lang=python
+      - paths=source_relative
+  # --- Rust ---
+  - remote: buf.build/community/neoeinstein-prost
+    out: proto/generated/rust
+  - remote: buf.build/community/neoeinstein-tonic
+    out: proto/generated/rust
+  - local: protoc-gen-mcp
+    out: proto/generated/rust
+    opt:
+      - lang=rust
+      - paths=source_relative

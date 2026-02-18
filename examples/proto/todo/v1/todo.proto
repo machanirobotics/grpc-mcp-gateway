@@ -1,0 +1,146 @@
+syntax = "proto3";
+
+package todo.v1;
+
+option go_package = "github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1";
+option java_multiple_files = true;
+option java_outer_classname = "TodoProto";
+option java_package = "com.todo.v1";
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+
+import "google/api/resource.proto";
+import "google/protobuf/field_mask.proto";
+import "google/protobuf/timestamp.proto";
+
+// Represents a todo item in the system.
+message Todo {
+  option (google.api.resource) = {
+    type: "machanirobotics.app.todo.v1/Todo"
+    pattern: "users/{user}/todos/{todo}"
+    singular: "todo"
+    plural: "todos"
+  };
+
+  // The resource name of the todo item.
+  // Format: users/{user}/todos/{todo}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+  
+  // The title of the todo item.
+  string title = 2 [(google.api.field_behavior) = OPTIONAL];
+  
+  // The detailed description of the todo item.
+  string description = 3 [(google.api.field_behavior) = OPTIONAL];
+  
+  // Whether the todo item is completed.
+  bool completed = 4 [(google.api.field_behavior) = OPTIONAL];
+  
+  // The priority level of the todo item.
+  Priority priority = 5 [(google.api.field_behavior) = OPTIONAL];
+  
+  // The timestamp when the todo was created.
+  google.protobuf.Timestamp create_time = 6 [(google.api.field_behavior) = OUTPUT_ONLY];
+  
+  // The timestamp when the todo was last updated.
+  google.protobuf.Timestamp update_time = 7 [(google.api.field_behavior) = OUTPUT_ONLY];
+}
+
+// Request message for creating a new todo item.
+message CreateTodoRequest {
+  // The parent resource name where the todo will be created.
+  // Format: users/{user}
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      child_type: "machanirobotics.app.todo.v1/Todo"
+    }
+  ];
+  
+  // The todo item to create.
+  Todo todo = 2 [(google.api.field_behavior) = REQUIRED];
+  
+  // The ID to use for the todo, which will become the final component of the resource name.
+  string todo_id = 3 [(google.api.field_behavior) = REQUIRED];
+}
+
+
+// Request message for getting a todo item.
+message GetTodoRequest {
+  // The resource name of the todo to retrieve.
+  // Format: users/{user}/todos/{todo}
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      type: "machanirobotics.app.todo.v1/Todo"
+    }
+  ];
+}
+
+
+// Request message for listing todo items.
+message ListTodosRequest {
+  // The parent resource name.
+  // Format: users/{user}
+  string parent = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      child_type: "machanirobotics.app.todo.v1/Todo"
+    }
+  ];
+  
+  // The maximum number of todos to return.
+  int32 page_size = 2 [(google.api.field_behavior) = OPTIONAL];
+  
+  // The page token for pagination.
+  string page_token = 3 [(google.api.field_behavior) = OPTIONAL];
+}
+
+// Response message for listing todo items.
+message ListTodosResponse {
+  // The list of todo items.
+  repeated Todo todos = 1;
+  
+  // Token to retrieve the next page of results.
+  string next_page_token = 2;
+}
+
+// Request message for updating a todo item.
+message UpdateTodoRequest {
+  // The todo item to update.
+  Todo todo = 1 [(google.api.field_behavior) = REQUIRED];
+  
+  // The update mask specifying which fields to update.
+  google.protobuf.FieldMask update_mask = 2 [(google.api.field_behavior) = OPTIONAL];
+}
+
+
+// Request message for deleting a todo item.
+message DeleteTodoRequest {
+  // The resource name of the todo to delete.
+  string name = 1 [
+    (google.api.field_behavior) = REQUIRED,
+    (google.api.resource_reference) = {
+      type: "machanirobotics.app.todo.v1/Todo"
+    }
+  ];
+}
+
+// Priority levels for todo items.
+enum Priority {
+  // Priority not specified.
+  PRIORITY_UNSPECIFIED = 0;
+  
+  // Low priority todo item.
+  PRIORITY_LOW = 1;
+  
+  // Medium priority todo item.
+  PRIORITY_MEDIUM = 2;
+  
+  // High priority todo item.
+  PRIORITY_HIGH = 3;
+  
+  // Urgent priority todo item.
+  PRIORITY_URGENT = 4;
+}
