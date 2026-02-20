@@ -38,6 +38,9 @@ type MCPServerConfig struct {
 	BasePath string
 	// GeneratedBasePath is the proto-derived default BasePath. If set, it takes precedence over BasePath.
 	GeneratedBasePath string
+	// OnReady is called after BasePath is resolved, just before the server starts listening.
+	// Use this to log or inspect the final endpoint.
+	OnReady func(cfg *MCPServerConfig)
 }
 
 // NewMCPServer creates an mcp.Server from a MCPServerConfig.
@@ -97,6 +100,11 @@ func StartServer(ctx context.Context, cfg *MCPServerConfig, register func(s *mcp
 		}
 	}
 
+	// Notify caller that BasePath is resolved.
+	if cfg.OnReady != nil {
+		cfg.OnReady(cfg)
+	}
+
 	// Start HTTP transport(s) if requested.
 	if len(httpTransports) > 0 {
 		httpServer := NewMCPServer(cfg)
@@ -146,7 +154,8 @@ func serveStdio(ctx context.Context, server *mcp.Server) error {
 // Endpoint represents an MCP server endpoint.
 type Endpoint struct {
 	// Protocol is "stdio", "http", or "https".
-	Protocol string
+	Protocol  string
+	Transport string
 	// URL is the full endpoint URL. Empty for stdio.
 	URL string
 }
@@ -189,7 +198,19 @@ func ServerEndpoint(cfg *MCPServerConfig) (*Endpoint, error) {
 	}()
 
 	if hasStdio && !hasHTTP {
-		return &Endpoint{Protocol: "stdio", URL: ""}, nil
+		return &Endpoint{Protocol: "stdio", Transport: string(TransportStdio), URL: ""}, nil
+	}
+
+	// Determine the primary HTTP transport name.
+	transportName := string(TransportStreamableHTTP)
+	for _, t := range cfg.Transports {
+		if t == TransportSSE || t == TransportStreamableHTTP {
+			transportName = string(t)
+			break
+		}
+	}
+	if cfg.Transport != "" && len(cfg.Transports) == 0 {
+		transportName = string(cfg.Transport)
 	}
 
 	// HTTP endpoint
@@ -247,7 +268,8 @@ func ServerEndpoint(cfg *MCPServerConfig) (*Endpoint, error) {
 	}
 
 	return &Endpoint{
-		Protocol: protocol,
+		Protocol:  protocol,
+		Transport: transportName,
 		URL:       fmt.Sprintf("%s://%s:%s%s", protocol, host, port, path),
 	}, nil
 }
