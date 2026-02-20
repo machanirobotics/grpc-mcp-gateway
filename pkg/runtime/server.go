@@ -101,7 +101,7 @@ func StartServer(ctx context.Context, cfg *MCPServerConfig, register func(s *mcp
 		if hasStdio {
 			go func() {
 				if err := http.ListenAndServe(cfg.Addr, mux); err != nil {
-					fmt.Errorf("runtime: HTTP server error: %w", err)
+					log.Printf("runtime: HTTP server error: %v", err)
 				}
 			}()
 		} else {
