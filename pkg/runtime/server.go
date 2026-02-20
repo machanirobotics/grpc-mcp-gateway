@@ -101,7 +101,7 @@ func StartServer(ctx context.Context, cfg *MCPServerConfig, register func(s *mcp
 		if hasStdio {
 			go func() {
 				if err := http.ListenAndServe(cfg.Addr, mux); err != nil {
-					log.Printf("HTTP server error: %v", err)
+					fmt.Errorf("runtime: HTTP server error: %w", err)
 				}
 			}()
 		} else {
@@ -125,11 +125,9 @@ func buildHTTPMux(server *mcp.Server, cfg *MCPServerConfig, transports []Transpo
 		case TransportStreamableHTTP:
 			h := mcp.NewStreamableHTTPHandler(func(_ *http.Request) *mcp.Server { return server }, cfg.StreamableHTTPOptions)
 			mux.Handle(cfg.BasePath, h)
-			log.Printf("MCP (streamable-http) on %s%s", cfg.Addr, cfg.BasePath)
 		case TransportSSE:
 			h := mcp.NewSSEHandler(func(_ *http.Request) *mcp.Server { return server }, cfg.SSEOptions)
 			mux.Handle(cfg.BasePath+"/", h)
-			log.Printf("MCP (sse) on %s%s", cfg.Addr, cfg.BasePath)
 		}
 	}
 	return mux
@@ -137,6 +135,5 @@ func buildHTTPMux(server *mcp.Server, cfg *MCPServerConfig, transports []Transpo
 
 func serveStdio(ctx context.Context, server *mcp.Server) error {
 	log.SetOutput(os.Stderr)
-	log.Println("MCP server (stdio) started")
 	return server.Run(ctx, &mcp.StdioTransport{})
 }
