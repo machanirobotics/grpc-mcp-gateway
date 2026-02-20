@@ -137,3 +137,71 @@ func serveStdio(ctx context.Context, server *mcp.Server) error {
 	log.SetOutput(os.Stderr)
 	return server.Run(ctx, &mcp.StdioTransport{})
 }
+
+// ServerEndpoint returns the full HTTP endpoint (protocol, host:port, path) for an MCP server.
+// For stdio transport, it returns "stdio", "", nil.
+// For HTTP transports, it uses the config's Addr and BasePath.
+func ServerEndpoint(cfg *MCPServerConfig) (string, string, error) {
+	// Detect if we're in stdio-only mode.
+	hasStdio := cfg.Transport == TransportStdio || (len(cfg.Transports) > 0 && func() bool {
+		for _, t := range cfg.Transports {
+			if t == TransportStdio {
+				return true
+			}
+		}
+		return false
+	}())
+	hasHTTP := cfg.Transport == TransportStreamableHTTP || cfg.Transport == TransportSSE || func() bool {
+		for _, t := range cfg.Transports {
+			if t == TransportStreamableHTTP || t == TransportSSE {
+				return true
+			}
+		}
+		return false
+	}()
+
+	if hasStdio && !hasHTTP {
+		return "stdio", "", nil
+	}
+
+	// HTTP endpoint
+	addr := cfg.Addr
+	if addr == "" {
+		addr = ":8080"
+	}
+
+	// Resolve listen address for external access
+	host := os.Getenv("MCP_SERVER_HOST")
+	if host == "" {
+		if strings.HasPrefix(addr, ":") {
+			host = "localhost"
+		} else {
+			host, _, _ = strings.Cut(addr, ":")
+		}
+	}
+
+	port := os.Getenv("MCP_SERVER_PORT")
+	if port == "" {
+		if strings.HasPrefix(addr, ":") {
+			port = strings.TrimPrefix(addr, ":")
+		} else {
+			_, p, _ := strings.Cut(addr, ":")
+			port = p
+		}
+		if port == "" {
+			port = "8080"
+		}
+	}
+
+	protocol := "http"
+	if os.Getenv("MCP_SERVER_TLS") == "true" {
+		protocol = "https"
+	}
+
+	path := cfg.BasePath
+	if path == "" {
+		path = "/mcp"
+	}
+
+	return protocol, fmt.Sprintf("%s:%s%s", host, port, path), nil
+}
