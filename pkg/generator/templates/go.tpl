@@ -6,7 +6,6 @@ package {{ .GoPackage }}
 
 import (
 	"context"
-	"log"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
