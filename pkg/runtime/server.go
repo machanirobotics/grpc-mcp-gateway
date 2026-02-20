@@ -78,7 +78,9 @@ func StartServer(ctx context.Context, cfg *MCPServerConfig, register func(s *mcp
 	if cfg.Addr == "" {
 		cfg.Addr = ":8080"
 	}
-	if cfg.BasePath == "" {
+	if cfg.GeneratedBasePath != "" {
+		cfg.BasePath = cfg.GeneratedBasePath
+	} else if cfg.BasePath == "" {
 		cfg.BasePath = "/mcp"
 	}
 
