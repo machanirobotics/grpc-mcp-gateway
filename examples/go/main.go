@@ -49,8 +49,15 @@ func main() {
 		Version:    "0.1.0",
 		Transports: transports,
 		Addr:       mcpAddr,
+		// Set the proto-derived path as the generated default
+		GeneratedBasePath: todopbv1.TodoServiceMCPDefaultBasePath,
 	}
-	log.Printf("MCP server listening on %s (transports=%v)", mcpAddr, transports)
+
+	if ep, err := runtime.ServerEndpoint(cfg); err == nil {
+		log.Printf("MCP will listen on %s", ep.URL)
+	}
+	
+	// ServeTodoServiceMCP will also set GeneratedBasePath
 	if err := todopbv1.ServeTodoServiceMCP(context.Background(), srv, cfg); err != nil {
 		log.Fatalf("MCP server error: %v", err)
 	}

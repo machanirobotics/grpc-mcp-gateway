@@ -6,6 +6,7 @@ package {{ .GoPackage }}
 
 import (
 	"context"
+	"log"
 
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
@@ -90,12 +91,11 @@ const {{ $svcName }}MCPDefaultBasePath = "{{ index $.ServiceBasePaths $svcName }
 
 // Serve{{ $svcName }}MCP creates an MCP server, registers the service tools, and
 // starts serving using the configured transport (streamable-http, sse, or stdio).
-// If cfg.BasePath is empty it defaults to {{ $svcName }}MCPDefaultBasePath.
-// This is a blocking call.
+// Uses the proto-derived BasePath. This is a blocking call.
 func Serve{{ $svcName }}MCP(ctx context.Context, srv {{ $svcName }}MCPServer, cfg *runtime.MCPServerConfig, opts ...runtime.Option) error {
-	if cfg.BasePath == "" {
-		cfg.BasePath = {{ $svcName }}MCPDefaultBasePath
-	}
+	// Set the proto-derived path as the generated default
+	cfg.GeneratedBasePath = {{ $svcName }}MCPDefaultBasePath
+	
 	return runtime.StartServer(ctx, cfg, func(s *mcp.Server) {
 		Register{{ $svcName }}MCPHandler(s, srv, opts...)
 	})

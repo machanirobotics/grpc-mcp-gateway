@@ -36,6 +36,8 @@ type MCPServerConfig struct {
 	SSEOptions *mcp.SSEOptions
 	// BasePath is the HTTP path prefix for the MCP endpoint (default "/mcp").
 	BasePath string
+	// GeneratedBasePath is the proto-derived default BasePath. If set, it takes precedence over BasePath.
+	GeneratedBasePath string
 }
 
 // NewMCPServer creates an mcp.Server from a MCPServerConfig.
@@ -98,6 +100,7 @@ func StartServer(ctx context.Context, cfg *MCPServerConfig, register func(s *mcp
 		httpServer := NewMCPServer(cfg)
 		register(httpServer)
 		mux := buildHTTPMux(httpServer, cfg, httpTransports)
+		
 		if hasStdio {
 			go func() {
 				if err := http.ListenAndServe(cfg.Addr, mux); err != nil {
@@ -138,10 +141,33 @@ func serveStdio(ctx context.Context, server *mcp.Server) error {
 	return server.Run(ctx, &mcp.StdioTransport{})
 }
 
-// ServerEndpoint returns the full HTTP endpoint (protocol, host:port, path) for an MCP server.
-// For stdio transport, it returns "stdio", "", nil.
-// For HTTP transports, it uses the config's Addr and BasePath.
-func ServerEndpoint(cfg *MCPServerConfig) (string, string, error) {
+// Endpoint represents an MCP server endpoint.
+type Endpoint struct {
+	// Protocol is "stdio", "http", or "https".
+	Protocol string
+	// URL is the full endpoint URL. Empty for stdio.
+	URL string
+}
+
+// ResolveBasePath returns the effective BasePath for a given config and generated default.
+// If cfg.BasePath is empty, it returns the generatedDefault; otherwise it returns cfg.BasePath.
+func ResolveBasePath(cfg *MCPServerConfig, generatedDefault string) string {
+	if cfg.BasePath == "" {
+		return generatedDefault
+	}
+	return cfg.BasePath
+}
+
+// PreferGeneratedBasePath returns the generated default even if cfg.BasePath is set.
+// This is useful when you want the proto-derived path to take precedence.
+func PreferGeneratedBasePath(generatedDefault string, cfg *MCPServerConfig) string {
+	return generatedDefault
+}
+
+// ServerEndpoint returns the endpoint for an MCP server based on its config.
+// For stdio transport, it returns Endpoint{Protocol: "stdio", URL: ""}.
+// For HTTP transports, it returns Endpoint{Protocol: "http|https", URL: "http://host:port/path"}.
+func ServerEndpoint(cfg *MCPServerConfig) (*Endpoint, error) {
 	// Detect if we're in stdio-only mode.
 	hasStdio := cfg.Transport == TransportStdio || (len(cfg.Transports) > 0 && func() bool {
 		for _, t := range cfg.Transports {
@@ -161,7 +187,7 @@ func ServerEndpoint(cfg *MCPServerConfig) (string, string, error) {
 	}()
 
 	if hasStdio && !hasHTTP {
-		return "stdio", "", nil
+		return &Endpoint{Protocol: "stdio", URL: ""}, nil
 	}
 
 	// HTTP endpoint
@@ -172,24 +198,37 @@ func ServerEndpoint(cfg *MCPServerConfig) (string, string, error) {
 
 	// Resolve listen address for external access
 	host := os.Getenv("MCP_SERVER_HOST")
-	if host == "" {
-		if strings.HasPrefix(addr, ":") {
-			host = "localhost"
-		} else {
-			host, _, _ = strings.Cut(addr, ":")
-		}
-	}
-
 	port := os.Getenv("MCP_SERVER_PORT")
-	if port == "" {
+	
+	if host == "" || port == "" {
 		if strings.HasPrefix(addr, ":") {
-			port = strings.TrimPrefix(addr, ":")
+			// :6503 -> localhost:6503
+			if host == "" {
+				host = "localhost"
+			}
+			if port == "" {
+				port = strings.TrimPrefix(addr, ":")
+			}
 		} else {
-			_, p, _ := strings.Cut(addr, ":")
-			port = p
-		}
-		if port == "" {
-			port = "8080"
+			// host:port or just port
+			h, p, found := strings.Cut(addr, ":")
+			if found && p != "" {
+				// host:port format
+				if host == "" {
+					host = h
+				}
+				if port == "" {
+					port = p
+				}
+			} else {
+				// no port found, use defaults
+				if host == "" {
+					host = "localhost"
+				}
+				if port == "" {
+					port = "8080"
+				}
+			}
 		}
 	}
 
@@ -199,9 +238,14 @@ func ServerEndpoint(cfg *MCPServerConfig) (string, string, error) {
 	}
 
 	path := cfg.BasePath
-	if path == "" {
+	if cfg.GeneratedBasePath != "" {
+		path = cfg.GeneratedBasePath
+	} else if path == "" {
 		path = "/mcp"
 	}
 
-	return protocol, fmt.Sprintf("%s:%s%s", host, port, path), nil
+	return &Endpoint{
+		Protocol: protocol,
+		URL:       fmt.Sprintf("%s://%s:%s%s", protocol, host, port, path),
+	}, nil
 }
