@@ -1,8 +1,10 @@
 package generator
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
+	"go/parser"
 	"go/token"
 	"path"
 	"path/filepath"
@@ -90,7 +92,8 @@ func (g *FileGenerator) Generate(packageSuffix string) {
 	g.genImportPath = goImportPath
 
 	funcMap := template.FuncMap{
-		"backtick": func() string { return "`" },
+		"backtick":     func() string { return "`" },
+		"escapeQuotes": func(s string) string { return strings.ReplaceAll(s, `"`, `\"`) },
 	}
 	tpl, err := template.New("gen").Funcs(funcMap).Parse(codeTemplates[LangGo])
 	if err != nil {
@@ -99,7 +102,20 @@ func (g *FileGenerator) Generate(packageSuffix string) {
 	}
 
 	params := g.buildParams()
-	if err := tpl.Execute(g.gf, params); err != nil {
+	var buf bytes.Buffer
+	if err := tpl.Execute(&buf, params); err != nil {
+		g.gen.Error(err)
+		return
+	}
+
+	// Validate generated Go source is syntactically correct.
+	fset := token.NewFileSet()
+	if _, err := parser.ParseFile(fset, "", buf.Bytes(), parser.AllErrors); err != nil {
+		g.gen.Error(fmt.Errorf("%s: unparsable Go source: %v", file.GeneratedFilenamePrefix+generatedFilenameExtension, err))
+		return
+	}
+
+	if _, err := g.gf.Write(buf.Bytes()); err != nil {
 		g.gen.Error(err)
 	}
 }

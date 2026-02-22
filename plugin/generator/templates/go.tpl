@@ -77,7 +77,7 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
-				{Name: "{{ .Name }}", Description: "{{ .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
 			})
 			if elicitErr != nil {
@@ -138,10 +138,10 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 		Description: "{{ $tool.MethodOpts.Prompt.Description }}",
 		Arguments: []*mcp.PromptArgument{
 		{{- range $tool.MethodOpts.Prompt.Arguments }}
-			{Name: "{{ .Name }}", Description: "{{ .Description }}", Required: {{ .Required }}},
+			{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}},
 		{{- end }}
 		},
-	}, runtime.DefaultPromptHandler("{{ $tool.MethodOpts.Prompt.Description }}"))
+	}, runtime.DefaultPromptHandler("{{ escapeQuotes $tool.MethodOpts.Prompt.Description }}"))
 {{- end }}
 {{- end }}
 {{- end }}
@@ -149,9 +149,9 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 
 	s.AddResource(&mcp.Resource{
 		URI:      appResourceURI,
-		Name:     "{{ $svcOpts.App.Name }}",
+		Name:     "{{ escapeQuotes $svcOpts.App.Name }}",
 		MIMEType: "text/html",
-	}, runtime.DefaultAppResourceHandler("{{ $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ $svcOpts.App.Description }}"))
+	}, runtime.DefaultAppResourceHandler("{{ escapeQuotes $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ escapeQuotes $svcOpts.App.Description }}"))
 {{- end }}
 }
 {{- end }}
@@ -227,7 +227,7 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
-				{Name: "{{ .Name }}", Description: "{{ .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
 			})
 			if elicitErr != nil {
@@ -289,10 +289,10 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 		Description: "{{ $tool.MethodOpts.Prompt.Description }}",
 		Arguments: []*mcp.PromptArgument{
 		{{- range $tool.MethodOpts.Prompt.Arguments }}
-			{Name: "{{ .Name }}", Description: "{{ .Description }}", Required: {{ .Required }}},
+			{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}},
 		{{- end }}
 		},
-	}, runtime.DefaultPromptHandler("{{ $tool.MethodOpts.Prompt.Description }}"))
+	}, runtime.DefaultPromptHandler("{{ escapeQuotes $tool.MethodOpts.Prompt.Description }}"))
 {{- end }}
 {{- end }}
 {{- end }}
@@ -300,9 +300,9 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 
 	s.AddResource(&mcp.Resource{
 		URI:      appResourceURI,
-		Name:     "{{ $svcOpts.App.Name }}",
+		Name:     "{{ escapeQuotes $svcOpts.App.Name }}",
 		MIMEType: "text/html",
-	}, runtime.DefaultAppResourceHandler("{{ $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ $svcOpts.App.Description }}"))
+	}, runtime.DefaultAppResourceHandler("{{ escapeQuotes $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ escapeQuotes $svcOpts.App.Description }}"))
 {{- end }}
 }
 {{- end }}

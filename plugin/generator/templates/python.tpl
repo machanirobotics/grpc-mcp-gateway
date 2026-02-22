@@ -64,10 +64,10 @@ def _{{ $svcName | snakeCase }}_prompts() -> list[types.Prompt]:
 {{- if and $tool.MethodOpts $tool.MethodOpts.Prompt }}
         types.Prompt(
             name="{{ $tool.MethodOpts.Prompt.Name }}",
-            description="{{ $tool.MethodOpts.Prompt.Description }}",
+            description="{{ escapeQuotes $tool.MethodOpts.Prompt.Description }}",
             arguments=[
             {{- range $tool.MethodOpts.Prompt.Arguments }}
-                types.PromptArgument(name="{{ .Name }}", description="{{ .Description }}", required={{ if .Required }}True{{ else }}False{{ end }}),
+                types.PromptArgument(name="{{ .Name }}", description="{{ escapeQuotes .Description }}", required={{ if .Required }}True{{ else }}False{{ end }}),
             {{- end }}
             ],
         ),
@@ -81,10 +81,10 @@ def _{{ $svcName | snakeCase }}_resources() -> list[types.Resource | types.Resou
 {{- if and $svcOpts $svcOpts.Resources }}
 {{- range $svcOpts.Resources }}
 {{- if .URI }}
-        types.Resource(uri="{{ .URI }}", name="{{ .Name }}", description="{{ .Description }}", mimeType="{{ .MimeType }}"),
+        types.Resource(uri="{{ .URI }}", name="{{ .Name }}", description="{{ escapeQuotes .Description }}", mimeType="{{ .MimeType }}"),
 {{- end }}
 {{- if .URITemplate }}
-        types.ResourceTemplate(uriTemplate="{{ .URITemplate }}", name="{{ .Name }}", description="{{ .Description }}", mimeType="{{ .MimeType }}"),
+        types.ResourceTemplate(uriTemplate="{{ .URITemplate }}", name="{{ .Name }}", description="{{ escapeQuotes .Description }}", mimeType="{{ .MimeType }}"),
 {{- end }}
 {{- end }}
 {{- end }}
@@ -124,7 +124,7 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
                         "type": "object",
                         "properties": {
                         {{- range $tool.MethodOpts.Elicitation.Fields }}
-                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
+                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
                         {{- end }}
                         },
                         "required": [{{ range $tool.MethodOpts.Elicitation.Fields }}{{ if .Required }}"{{ .Name }}", {{ end }}{{ end }}],
@@ -246,7 +246,7 @@ def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ 
                         "type": "object",
                         "properties": {
                         {{- range $tool.MethodOpts.Elicitation.Fields }}
-                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
+                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
                         {{- end }}
                         },
                         "required": [{{ range $tool.MethodOpts.Elicitation.Fields }}{{ if .Required }}"{{ .Name }}", {{ end }}{{ end }}],

@@ -56,10 +56,10 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
         {{- if and $info.MethodOpts $info.MethodOpts.Prompt }}
             serde_json::from_value(json!({
                 "name": "{{ $info.MethodOpts.Prompt.Name }}",
-                "description": "{{ $info.MethodOpts.Prompt.Description | rsEscape }}",
+                "description": "{{ $info.MethodOpts.Prompt.Description | rsEscape | escapeQuotes }}",
                 "arguments": [
                 {{- range $info.MethodOpts.Prompt.Arguments }}
-                    {"name": "{{ .Name }}", "description": "{{ .Description | rsEscape }}", "required": {{ if .Required }}true{{ else }}false{{ end }}},
+                    {"name": "{{ .Name }}", "description": "{{ .Description | rsEscape | escapeQuotes }}", "required": {{ if .Required }}true{{ else }}false{{ end }}},
                 {{- end }}
                 ]
             })).expect("generated prompt must be valid"),
@@ -76,7 +76,7 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
         {{- if .URI }}
             serde_json::from_value(json!({
                 "uri": "{{ .URI }}", "name": "{{ .Name }}",
-                "description": "{{ .Description }}", "mimeType": "{{ .MimeType }}"
+                "description": "{{ escapeQuotes .Description }}", "mimeType": "{{ .MimeType }}"
             })).expect("generated resource must be valid"),
         {{- end }}
         {{- end }}
@@ -89,7 +89,7 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
         {{- if .URITemplate }}
             serde_json::from_value(json!({
                 "uriTemplate": "{{ .URITemplate }}", "name": "{{ .Name }}",
-                "description": "{{ .Description }}", "mimeType": "{{ .MimeType }}"
+                "description": "{{ escapeQuotes .Description }}", "mimeType": "{{ .MimeType }}"
             })).expect("generated resource template must be valid"),
         {{- end }}
         {{- end }}

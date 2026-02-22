@@ -56,8 +56,9 @@ func (g *PythonFileGenerator) Generate() {
 	gf := g.gen.NewGeneratedFile(outName, "")
 
 	funcMap := template.FuncMap{
-		"snakeCase": toSnakeCase,
-		"pyString":  pyStringLiteral,
+		"snakeCase":    toSnakeCase,
+		"pyString":     pyStringLiteral,
+		"escapeQuotes": func(s string) string { return strings.ReplaceAll(s, `"`, `\"`) },
 	}
 
 	tpl, err := template.New("pygen").Funcs(funcMap).Parse(codeTemplates[LangPython])

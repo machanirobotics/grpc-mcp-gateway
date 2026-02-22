@@ -64,6 +64,7 @@ func (g *RustFileGenerator) Generate() {
 		"snakeCase":          toSnakeCase,
 		"screamingSnakeCase": toScreamingSnakeCase,
 		"rsEscape":           rsStringEscape,
+		"escapeQuotes":       func(s string) string { return strings.ReplaceAll(s, `"`, `\"`) },
 	}
 
 	tpl, err := template.New("rsgen").Funcs(funcMap).Parse(codeTemplates[LangRust])
