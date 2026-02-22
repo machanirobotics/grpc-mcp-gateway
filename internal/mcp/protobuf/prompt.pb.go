@@ -166,8 +166,8 @@ const file_mcp_protobuf_prompt_proto_rawDesc = "" +
 	"\x06schema\x18\x03 \x01(\tR\x06schema\"F\n" +
 	"\x0eMCPToolOptions\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescriptionBm\n" +
-	"\x10com.mcp.protobufB\vPromptProtoP\x01ZJgithub.com/machanirobotics/grpc-mcp-gateway/v2/internal/mcp/protobuf;mcppbb\x06proto3"
+	"\vdescription\x18\x02 \x01(\tR\vdescriptionBj\n" +
+	"\x10com.mcp.protobufB\vPromptProtoP\x01ZGgithub.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppbb\x06proto3"
 
 var (
 	file_mcp_protobuf_prompt_proto_rawDescOnce sync.Once

@@ -3,4 +3,4 @@ plugins:
   - local: protoc-gen-go
     out: ..
     opt:
-      - module=github.com/machanirobotics/grpc-mcp-gateway/v2
+      - module=github.com/machanirobotics/grpc-mcp-gateway
