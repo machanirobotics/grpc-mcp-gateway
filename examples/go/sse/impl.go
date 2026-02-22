@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1"
+	"github.com/machanirobotics/grpc-mcp-gateway/v2/examples/proto/generated/go/todo/todopbv1"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/types/known/emptypb"
 	"google.golang.org/protobuf/types/known/timestamppb"

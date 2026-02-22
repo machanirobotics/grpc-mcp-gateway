@@ -1,7 +1,7 @@
 # grpc-mcp-gateway Justfile
 # Run `just --list` to see all available recipes.
 
-mod := "github.com/machanirobotics/grpc-mcp-gateway"
+mod := "github.com/machanirobotics/grpc-mcp-gateway/v2"
 bin := "protoc-gen-mcp"
 
 # Default: list all recipes
