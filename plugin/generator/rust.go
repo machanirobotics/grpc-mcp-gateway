@@ -106,25 +106,13 @@ func (g *RustFileGenerator) buildRsParams() RsTplParams {
 				// Resolve prompt schema → populate Arguments from proto message fields.
 				if methOpts.Prompt != nil && methOpts.Prompt.Schema != "" {
 					for _, sf := range ResolveSchemaFields(g.gen, methOpts.Prompt.Schema) {
-						methOpts.Prompt.Arguments = append(methOpts.Prompt.Arguments, MCPPromptArgOpts{
-							Name:        sf.Name,
-							Description: sf.Description,
-							Required:    sf.Required,
-							Type:        sf.Type,
-							EnumValues:  sf.EnumValues,
-						})
+						methOpts.Prompt.Arguments = append(methOpts.Prompt.Arguments, MCPPromptArgOpts(sf))
 					}
 				}
 				// Resolve elicitation schema → populate Fields from proto message fields.
 				if methOpts.Elicitation != nil && methOpts.Elicitation.Schema != "" {
 					for _, sf := range ResolveSchemaFields(g.gen, methOpts.Elicitation.Schema) {
-						methOpts.Elicitation.Fields = append(methOpts.Elicitation.Fields, MCPElicitFieldOpts{
-							Name:        sf.Name,
-							Description: sf.Description,
-							Required:    sf.Required,
-							Type:        sf.Type,
-							EnumValues:  sf.EnumValues,
-						})
+						methOpts.Elicitation.Fields = append(methOpts.Elicitation.Fields, MCPElicitFieldOpts(sf))
 					}
 				}
 			}

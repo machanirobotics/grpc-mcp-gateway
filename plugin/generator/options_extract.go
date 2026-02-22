@@ -72,27 +72,3 @@ func ExtractMethodOptions(meth *protogen.Method) *MCPMethodOpts {
 	}
 	return result
 }
-
-// mimeTypeToString maps the MCPMimeType enum to its MIME string.
-func mimeTypeToString(mt mcppb.MCPMimeType) string {
-	switch mt {
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_PLAIN:
-		return "text/plain"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_HTML:
-		return "text/html"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_MARKDOWN:
-		return "text/markdown"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_XML:
-		return "application/xml"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_OCTET_STREAM:
-		return "application/octet-stream"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_PDF:
-		return "application/pdf"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_IMAGE_PNG:
-		return "image/png"
-	case mcppb.MCPMimeType_MCP_MIME_TYPE_IMAGE_JPEG:
-		return "image/jpeg"
-	default:
-		return "application/json"
-	}
-}
