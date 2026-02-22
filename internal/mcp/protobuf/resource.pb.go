@@ -113,8 +113,8 @@ const file_mcp_protobuf_resource_proto_rawDesc = "" +
 	"\apattern\x18\x02 \x01(\tR\apattern\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x126\n" +
-	"\tmime_type\x18\x05 \x01(\x0e2\x19.mcp.protobuf.MCPMimeTypeR\bmimeTypeBo\n" +
-	"\x10com.mcp.protobufB\rResourceProtoP\x01ZJgithub.com/machanirobotics/grpc-mcp-gateway/v2/internal/mcp/protobuf;mcppbb\x06proto3"
+	"\tmime_type\x18\x05 \x01(\x0e2\x19.mcp.protobuf.MCPMimeTypeR\bmimeTypeBl\n" +
+	"\x10com.mcp.protobufB\rResourceProtoP\x01ZGgithub.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppbb\x06proto3"
 
 var (
 	file_mcp_protobuf_resource_proto_rawDescOnce sync.Once

@@ -6,7 +6,7 @@ import (
 	"os"
 	"runtime/debug"
 
-	"github.com/machanirobotics/grpc-mcp-gateway/v2/plugin/generator"
+	"github.com/machanirobotics/grpc-mcp-gateway/plugin/generator"
 	"google.golang.org/protobuf/compiler/protogen"
 )
 

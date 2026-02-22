@@ -1,8 +1,9 @@
-module github.com/machanirobotics/grpc-mcp-gateway/v2
+module github.com/machanirobotics/grpc-mcp-gateway
 
 go 1.25.6
 
 require (
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	github.com/google/jsonschema-go v0.4.2
 	github.com/modelcontextprotocol/go-sdk v1.3.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260217215200-42d3e9bedb6d

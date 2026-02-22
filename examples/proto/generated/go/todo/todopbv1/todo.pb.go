@@ -622,8 +622,8 @@ const file_todo_v1_todo_proto_rawDesc = "" +
 	"\fPRIORITY_LOW\x10\x01\x12\x13\n" +
 	"\x0fPRIORITY_MEDIUM\x10\x02\x12\x11\n" +
 	"\rPRIORITY_HIGH\x10\x03\x12\x13\n" +
-	"\x0fPRIORITY_URGENT\x10\x04B}\n" +
-	"\vcom.todo.v1B\tTodoProtoP\x01Zagithub.com/machanirobotics/grpc-mcp-gateway/v2/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3"
+	"\x0fPRIORITY_URGENT\x10\x04Bz\n" +
+	"\vcom.todo.v1B\tTodoProtoP\x01Z^github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3"
 
 var (
 	file_todo_v1_todo_proto_rawDescOnce sync.Once

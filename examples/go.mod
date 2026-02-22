@@ -1,9 +1,9 @@
-module github.com/machanirobotics/grpc-mcp-gateway/v2/examples
+module github.com/machanirobotics/grpc-mcp-gateway/examples
 
 go 1.25.6
 
 require (
-	github.com/machanirobotics/grpc-mcp-gateway/v2 v2.0.0
+	github.com/machanirobotics/grpc-mcp-gateway v0.0.0
 	github.com/modelcontextprotocol/go-sdk v1.3.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260217215200-42d3e9bedb6d
 	google.golang.org/grpc v1.79.1
@@ -22,4 +22,4 @@ require (
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260217215200-42d3e9bedb6d // indirect
 )
 
-replace github.com/machanirobotics/grpc-mcp-gateway/v2 => ../
+replace github.com/machanirobotics/grpc-mcp-gateway => ../

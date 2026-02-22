@@ -5,7 +5,7 @@ TodoService MCP server examples in Go, demonstrating all supported transports.
 ## Prerequisites
 
 - Go 1.25+
-- `protoc-gen-mcp` installed (`go install github.com/machanirobotics/grpc-mcp-gateway/v2/plugin/cmd/protoc-gen-mcp@latest`)
+- `protoc-gen-mcp` installed (`go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp@latest`)
 - Generated code already in `proto/generated/go/` (run `buf generate` from `examples/`)
 
 ## Structure

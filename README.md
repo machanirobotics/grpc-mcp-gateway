@@ -66,10 +66,10 @@ sequenceDiagram
 ### 1. Install the plugin
 
 ```bash
-go install github.com/machanirobotics/grpc-mcp-gateway/v2/plugin/cmd/protoc-gen-mcp@latest
+go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp@latest
 ```
 
-Or download a binary from [GitHub Releases](https://github.com/machanirobotics/grpc-mcp-gateway/v2/releases).
+Or download a binary from [GitHub Releases](https://github.com/machanirobotics/grpc-mcp-gateway/releases).
 
 ### 2. Add the proto dependency
 
@@ -321,7 +321,7 @@ MCP_TRANSPORT=stdio,streamable-http cargo run --bin http
 ### Go runtime configuration
 
 ```go
-import "github.com/machanirobotics/grpc-mcp-gateway/v2/runtime"
+import "github.com/machanirobotics/grpc-mcp-gateway/runtime"
 
 cfg := &runtime.MCPServerConfig{
     Name:       "my-service",

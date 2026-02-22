@@ -49,7 +49,7 @@ The proto uses:
 Install the plugin and generate code for all languages:
 
 ```bash
-go install github.com/machanirobotics/grpc-mcp-gateway/v2/plugin/cmd/protoc-gen-mcp@latest
+go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp@latest
 
 cd examples
 buf generate
