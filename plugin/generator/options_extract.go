@@ -1,0 +1,98 @@
+package generator
+
+import (
+	mcppb "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf"
+	"google.golang.org/protobuf/compiler/protogen"
+	"google.golang.org/protobuf/proto"
+)
+
+// ExtractServiceOptions reads the mcp.protobuf.service extension from a service descriptor.
+func ExtractServiceOptions(svc *protogen.Service) *MCPServiceOpts {
+	opts := svc.Desc.Options()
+	if opts == nil {
+		return nil
+	}
+	ext, ok := proto.GetExtension(opts, mcppb.E_Service).(*mcppb.MCPServiceOptions)
+	if !ok || ext == nil {
+		return nil
+	}
+	result := &MCPServiceOpts{}
+	if ext.App != nil {
+		result.App = &MCPAppOpts{
+			Name:        ext.App.GetName(),
+			Version:     ext.App.GetVersion(),
+			Description: ext.App.GetDescription(),
+		}
+	}
+	return result
+}
+
+// ExtractMethodOptions reads mcp.protobuf.tool, mcp.protobuf.prompt, and mcp.protobuf.elicitation
+// extensions from a method descriptor and merges them into a single MCPMethodOpts.
+func ExtractMethodOptions(meth *protogen.Method) *MCPMethodOpts {
+	opts := meth.Desc.Options()
+	if opts == nil {
+		return nil
+	}
+
+	result := &MCPMethodOpts{}
+	hasAnything := false
+
+	// mcp.protobuf.tool — name/description overrides
+	toolExt, ok := proto.GetExtension(opts, mcppb.E_Tool).(*mcppb.MCPToolOptions)
+	if ok && toolExt != nil {
+		result.ToolName = toolExt.GetName()
+		result.ToolDescription = toolExt.GetDescription()
+		hasAnything = true
+	}
+
+	// mcp.protobuf.prompt — per-RPC prompt template with schema reference
+	promptExt, ok := proto.GetExtension(opts, mcppb.E_Prompt).(*mcppb.MCPPrompt)
+	if ok && promptExt != nil {
+		result.Prompt = &MCPPromptOpts{
+			Name:        promptExt.GetName(),
+			Description: promptExt.GetDescription(),
+			Schema:      promptExt.GetSchema(),
+		}
+		hasAnything = true
+	}
+
+	// mcp.protobuf.elicitation — confirmation dialog with schema reference
+	elicitExt, ok := proto.GetExtension(opts, mcppb.E_Elicitation).(*mcppb.MCPElicitation)
+	if ok && elicitExt != nil {
+		result.Elicitation = &MCPElicitationOpts{
+			Message: elicitExt.GetMessage(),
+			Schema:  elicitExt.GetSchema(),
+		}
+		hasAnything = true
+	}
+
+	if !hasAnything {
+		return nil
+	}
+	return result
+}
+
+// mimeTypeToString maps the MCPMimeType enum to its MIME string.
+func mimeTypeToString(mt mcppb.MCPMimeType) string {
+	switch mt {
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_PLAIN:
+		return "text/plain"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_HTML:
+		return "text/html"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_TEXT_MARKDOWN:
+		return "text/markdown"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_XML:
+		return "application/xml"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_OCTET_STREAM:
+		return "application/octet-stream"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_APPLICATION_PDF:
+		return "application/pdf"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_IMAGE_PNG:
+		return "image/png"
+	case mcppb.MCPMimeType_MCP_MIME_TYPE_IMAGE_JPEG:
+		return "image/jpeg"
+	default:
+		return "application/json"
+	}
+}

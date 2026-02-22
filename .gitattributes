@@ -1,0 +1,13 @@
+# Map custom extension to Protocol Buffer
+*.protobuf linguist-language=Protocol Buffer
+
+# In case you also have .proto, make sure they’re counted
+*.proto linguist-detectable=true
+
+# If your files live under paths Linguist normally ignores, un-ignore them:
+vendor/** linguist-vendored=false
+third_party/** linguist-vendored=false
+
+# If you generated any .proto files and Linguist guessed “generated”, override it:
+*.proto linguist-generated=false
+*.protobuf linguist-generated=false

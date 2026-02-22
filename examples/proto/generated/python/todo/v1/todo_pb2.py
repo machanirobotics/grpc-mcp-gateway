@@ -30,14 +30,20 @@ from google.protobuf import field_mask_pb2 as google_dot_protobuf_dot_field__mas
 from google.protobuf import timestamp_pb2 as google_dot_protobuf_dot_timestamp__pb2
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12todo/v1/todo.proto\x12\x07todo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x8b\x03\n\x04Todo\x12\x17\n\x04name\x18\x01 \x01(\tB\x03\xe0\x41\x08R\x04name\x12\x19\n\x05title\x18\x02 \x01(\tB\x03\xe0\x41\x01R\x05title\x12%\n\x0b\x64\x65scription\x18\x03 \x01(\tB\x03\xe0\x41\x01R\x0b\x64\x65scription\x12!\n\tcompleted\x18\x04 \x01(\x08\x42\x03\xe0\x41\x01R\tcompleted\x12\x32\n\x08priority\x18\x05 \x01(\x0e\x32\x11.todo.v1.PriorityB\x03\xe0\x41\x01R\x08priority\x12@\n\x0b\x63reate_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03R\ncreateTime\x12@\n\x0bupdate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03R\nupdateTime:M\xea\x41J\n machanirobotics.app.todo.v1/Todo\x12\x19users/{user}/todos/{todo}*\x05todos2\x04todo\"\x9b\x01\n\x11\x43reateTodoRequest\x12@\n\x06parent\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12&\n\x04todo\x18\x02 \x01(\x0b\x32\r.todo.v1.TodoB\x03\xe0\x41\x02R\x04todo\x12\x1c\n\x07todo_id\x18\x03 \x01(\tB\x03\xe0\x41\x02R\x06todoId\"N\n\x0eGetTodoRequest\x12<\n\x04name\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\n machanirobotics.app.todo.v1/TodoR\x04name\"\x9a\x01\n\x10ListTodosRequest\x12@\n\x06parent\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12 \n\tpage_size\x18\x02 \x01(\x05\x42\x03\xe0\x41\x01R\x08pageSize\x12\"\n\npage_token\x18\x03 \x01(\tB\x03\xe0\x41\x01R\tpageToken\"`\n\x11ListTodosResponse\x12#\n\x05todos\x18\x01 \x03(\x0b\x32\r.todo.v1.TodoR\x05todos\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"}\n\x11UpdateTodoRequest\x12&\n\x04todo\x18\x01 \x01(\x0b\x32\r.todo.v1.TodoB\x03\xe0\x41\x02R\x04todo\x12@\n\x0bupdate_mask\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.FieldMaskB\x03\xe0\x41\x01R\nupdateMask\"Q\n\x11\x44\x65leteTodoRequest\x12<\n\x04name\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\n machanirobotics.app.todo.v1/TodoR\x04name*s\n\x08Priority\x12\x18\n\x14PRIORITY_UNSPECIFIED\x10\x00\x12\x10\n\x0cPRIORITY_LOW\x10\x01\x12\x13\n\x0fPRIORITY_MEDIUM\x10\x02\x12\x11\n\rPRIORITY_HIGH\x10\x03\x12\x13\n\x0fPRIORITY_URGENT\x10\x04\x42x\n\x0b\x63om.todo.v1B\tTodoProtoP\x01Z\\github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x12todo/v1/todo.proto\x12\x07todo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x89\x01\n\x04User\x12\x17\n\x04name\x18\x01 \x01(\tB\x03\xe0\x41\x08R\x04name\x12&\n\x0c\x64isplay_name\x18\x02 \x01(\tB\x03\xe0\x41\x01R\x0b\x64isplayName:@\xea\x41=\n machanirobotics.app.todo.v1/User\x12\x0cusers/{user}*\x05users2\x04user\"\x8b\x03\n\x04Todo\x12\x17\n\x04name\x18\x01 \x01(\tB\x03\xe0\x41\x08R\x04name\x12\x19\n\x05title\x18\x02 \x01(\tB\x03\xe0\x41\x01R\x05title\x12%\n\x0b\x64\x65scription\x18\x03 \x01(\tB\x03\xe0\x41\x01R\x0b\x64\x65scription\x12!\n\tcompleted\x18\x04 \x01(\x08\x42\x03\xe0\x41\x01R\tcompleted\x12\x32\n\x08priority\x18\x05 \x01(\x0e\x32\x11.todo.v1.PriorityB\x03\xe0\x41\x01R\x08priority\x12@\n\x0b\x63reate_time\x18\x06 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03R\ncreateTime\x12@\n\x0bupdate_time\x18\x07 \x01(\x0b\x32\x1a.google.protobuf.TimestampB\x03\xe0\x41\x03R\nupdateTime:M\xea\x41J\n machanirobotics.app.todo.v1/Todo\x12\x19users/{user}/todos/{todo}*\x05todos2\x04todo\"\x9b\x01\n\x11\x43reateTodoRequest\x12@\n\x06parent\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12&\n\x04todo\x18\x02 \x01(\x0b\x32\r.todo.v1.TodoB\x03\xe0\x41\x02R\x04todo\x12\x1c\n\x07todo_id\x18\x03 \x01(\tB\x03\xe0\x41\x02R\x06todoId\"N\n\x0eGetTodoRequest\x12<\n\x04name\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\n machanirobotics.app.todo.v1/TodoR\x04name\"\x9a\x01\n\x10ListTodosRequest\x12@\n\x06parent\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12 \n\tpage_size\x18\x02 \x01(\x05\x42\x03\xe0\x41\x01R\x08pageSize\x12\"\n\npage_token\x18\x03 \x01(\tB\x03\xe0\x41\x01R\tpageToken\"`\n\x11ListTodosResponse\x12#\n\x05todos\x18\x01 \x03(\x0b\x32\r.todo.v1.TodoR\x05todos\x12&\n\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"}\n\x11UpdateTodoRequest\x12&\n\x04todo\x18\x01 \x01(\x0b\x32\r.todo.v1.TodoB\x03\xe0\x41\x02R\x04todo\x12@\n\x0bupdate_mask\x18\x02 \x01(\x0b\x32\x1a.google.protobuf.FieldMaskB\x03\xe0\x41\x01R\nupdateMask\"Q\n\x11\x44\x65leteTodoRequest\x12<\n\x04name\x18\x01 \x01(\tB(\xe0\x41\x02\xfa\x41\"\n machanirobotics.app.todo.v1/TodoR\x04name*s\n\x08Priority\x12\x18\n\x14PRIORITY_UNSPECIFIED\x10\x00\x12\x10\n\x0cPRIORITY_LOW\x10\x01\x12\x13\n\x0fPRIORITY_MEDIUM\x10\x02\x12\x11\n\rPRIORITY_HIGH\x10\x03\x12\x13\n\x0fPRIORITY_URGENT\x10\x04\x42z\n\x0b\x63om.todo.v1B\tTodoProtoP\x01Z^github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
 _builder.BuildTopDescriptorsAndMessages(DESCRIPTOR, 'todo.v1.todo_pb2', _globals)
 if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
-  _globals['DESCRIPTOR']._serialized_options = b'\n\013com.todo.v1B\tTodoProtoP\001Z\\github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1'
+  _globals['DESCRIPTOR']._serialized_options = b'\n\013com.todo.v1B\tTodoProtoP\001Z^github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1'
+  _globals['_USER'].fields_by_name['name']._loaded_options = None
+  _globals['_USER'].fields_by_name['name']._serialized_options = b'\340A\010'
+  _globals['_USER'].fields_by_name['display_name']._loaded_options = None
+  _globals['_USER'].fields_by_name['display_name']._serialized_options = b'\340A\001'
+  _globals['_USER']._loaded_options = None
+  _globals['_USER']._serialized_options = b'\352A=\n machanirobotics.app.todo.v1/User\022\014users/{user}*\005users2\004user'
   _globals['_TODO'].fields_by_name['name']._loaded_options = None
   _globals['_TODO'].fields_by_name['name']._serialized_options = b'\340A\010'
   _globals['_TODO'].fields_by_name['title']._loaded_options = None
@@ -74,20 +80,22 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_UPDATETODOREQUEST'].fields_by_name['update_mask']._serialized_options = b'\340A\001'
   _globals['_DELETETODOREQUEST'].fields_by_name['name']._loaded_options = None
   _globals['_DELETETODOREQUEST'].fields_by_name['name']._serialized_options = b'\340A\002\372A\"\n machanirobotics.app.todo.v1/Todo'
-  _globals['_PRIORITY']._serialized_start=1314
-  _globals['_PRIORITY']._serialized_end=1429
-  _globals['_TODO']._serialized_start=214
-  _globals['_TODO']._serialized_end=609
-  _globals['_CREATETODOREQUEST']._serialized_start=612
-  _globals['_CREATETODOREQUEST']._serialized_end=767
-  _globals['_GETTODOREQUEST']._serialized_start=769
-  _globals['_GETTODOREQUEST']._serialized_end=847
-  _globals['_LISTTODOSREQUEST']._serialized_start=850
-  _globals['_LISTTODOSREQUEST']._serialized_end=1004
-  _globals['_LISTTODOSRESPONSE']._serialized_start=1006
-  _globals['_LISTTODOSRESPONSE']._serialized_end=1102
-  _globals['_UPDATETODOREQUEST']._serialized_start=1104
-  _globals['_UPDATETODOREQUEST']._serialized_end=1229
-  _globals['_DELETETODOREQUEST']._serialized_start=1231
-  _globals['_DELETETODOREQUEST']._serialized_end=1312
+  _globals['_PRIORITY']._serialized_start=1454
+  _globals['_PRIORITY']._serialized_end=1569
+  _globals['_USER']._serialized_start=214
+  _globals['_USER']._serialized_end=351
+  _globals['_TODO']._serialized_start=354
+  _globals['_TODO']._serialized_end=749
+  _globals['_CREATETODOREQUEST']._serialized_start=752
+  _globals['_CREATETODOREQUEST']._serialized_end=907
+  _globals['_GETTODOREQUEST']._serialized_start=909
+  _globals['_GETTODOREQUEST']._serialized_end=987
+  _globals['_LISTTODOSREQUEST']._serialized_start=990
+  _globals['_LISTTODOSREQUEST']._serialized_end=1144
+  _globals['_LISTTODOSRESPONSE']._serialized_start=1146
+  _globals['_LISTTODOSRESPONSE']._serialized_end=1242
+  _globals['_UPDATETODOREQUEST']._serialized_start=1244
+  _globals['_UPDATETODOREQUEST']._serialized_end=1369
+  _globals['_DELETETODOREQUEST']._serialized_start=1371
+  _globals['_DELETETODOREQUEST']._serialized_end=1452
 # @@protoc_insertion_point(module_scope)

@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   lint:
-    name: Lint
+    name: Lint (Go)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,7 +23,7 @@ jobs:
           version: latest
 
   build:
-    name: Build
+    name: Build Plugin
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -34,18 +34,52 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Build
+      - name: Build protoc-gen-mcp
         env:
           GOOS: ${{ matrix.goos }}
           GOARCH: ${{ matrix.goarch }}
-        run: go build -ldflags "-s -w" -o /dev/null ./cmd/protoc-gen-mcp/
+        run: go build -ldflags "-s -w" -o /dev/null ./plugin/cmd/protoc-gen-mcp/
 
   test:
-    name: Test
+    name: Test (Go)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - run: go test ./...
+      - name: Test all modules
+        run: |
+          go test ./...
+          cd plugin && go test ./...
+          cd ../examples && go test ./...
+
+  python:
+    name: Check (Python)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+      - name: Install & verify imports
+        working-directory: examples/python
+        run: |
+          uv sync
+          uv run python -c "
+          import sys, os
+          sys.path.insert(0, os.path.join('..', 'proto', 'generated', 'python'))
+          from todo.v1.todo_service_pb2_mcp import register_todo_service_mcp_handler
+          print('Python generated code imports OK')
+          "
+      - name: Run smoke test
+        working-directory: examples/python
+        run: uv run python -m pytest smoke_test.py -v
+
+  rust:
+    name: Check (Rust)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - name: Cargo check
+        working-directory: examples/rust
+        run: cargo check --all-targets

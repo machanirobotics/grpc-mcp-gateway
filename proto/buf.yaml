@@ -1,0 +1,17 @@
+version: v2
+modules:
+  - path: .
+    name: buf.build/machanirobotics/grpc-mcp-gateway
+deps:
+  - buf.build/googleapis/googleapis
+lint:
+  use:
+    - STANDARD
+  except:
+    - PACKAGE_VERSION_SUFFIX
+    - ENUM_VALUE_PREFIX
+    - COMMENT_ENUM_VALUE
+    - COMMENT_ENUM
+breaking:
+  use:
+    - FILE

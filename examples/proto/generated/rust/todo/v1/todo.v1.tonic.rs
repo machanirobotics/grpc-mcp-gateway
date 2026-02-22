@@ -10,6 +10,8 @@ pub mod todo_service_client {
     )]
     use tonic::codegen::*;
     use tonic::codegen::http::Uri;
+    /** Service for managing todo items.
+*/
     #[derive(Debug, Clone)]
     pub struct TodoServiceClient<T> {
         inner: tonic::client::Grpc<T>,
@@ -253,6 +255,8 @@ pub mod todo_service_server {
             request: tonic::Request<super::DeleteTodoRequest>,
         ) -> std::result::Result<tonic::Response<()>, tonic::Status>;
     }
+    /** Service for managing todo items.
+*/
     #[derive(Debug)]
     pub struct TodoServiceServer<T> {
         inner: Arc<T>,

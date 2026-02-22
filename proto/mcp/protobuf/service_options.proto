@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "ServiceOptionsProto";
+option java_package = "com.mcp.protobuf";
+
+import "mcp/protobuf/app.proto";
+
+// MCPServiceOptions configures MCP behaviour for an entire gRPC service.
+message MCPServiceOptions {
+  // App-level metadata surfaced to MCP clients.
+  MCPApp app = 1;
+}

@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "FieldTypeProto";
+option java_package = "com.mcp.protobuf";
+
+// MCPFieldType enumerates JSON Schema primitive types used by elicitation fields.
+enum MCPFieldType {
+  // Default value; treated as string.
+  MCP_FIELD_TYPE_UNSPECIFIED = 0;
+  // JSON Schema "string" type.
+  MCP_FIELD_TYPE_STRING = 1;
+  // JSON Schema "number" type (floating-point).
+  MCP_FIELD_TYPE_NUMBER = 2;
+  // JSON Schema "boolean" type.
+  MCP_FIELD_TYPE_BOOLEAN = 3;
+  // JSON Schema "integer" type.
+  MCP_FIELD_TYPE_INTEGER = 4;
+}

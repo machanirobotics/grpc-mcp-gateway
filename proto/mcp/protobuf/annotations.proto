@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "AnnotationsProto";
+option java_package = "com.mcp.protobuf";
+
+import "google/protobuf/descriptor.proto";
+import "mcp/protobuf/service_options.proto";
+import "mcp/protobuf/prompt.proto";
+import "mcp/protobuf/elicitation.proto";
+
+// Attach MCP service options (app, prompts, resources) to a gRPC service.
+extend google.protobuf.ServiceOptions {
+  optional MCPServiceOptions service = 51000;
+}
+
+// Attach MCP tool options (name/description override) to a single RPC method.
+extend google.protobuf.MethodOptions {
+  optional MCPToolOptions tool = 51001;
+}
+
+// Attach a prompt template to a single RPC method.
+extend google.protobuf.MethodOptions {
+  optional MCPPrompt prompt = 51002;
+}
+
+// Attach an elicitation (confirmation dialog) to a single RPC method.
+extend google.protobuf.MethodOptions {
+  optional MCPElicitation elicitation = 51003;
+}

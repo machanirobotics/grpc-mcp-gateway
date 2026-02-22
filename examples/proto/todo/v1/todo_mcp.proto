@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+package todo.v1;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1";
+option java_multiple_files = true;
+option java_outer_classname = "TodoServiceProto";
+option java_package = "com.todo.v1";
+
+import "google/api/annotations.proto";
+import "google/api/client.proto";
+import "google/api/field_behavior.proto";
+import "google/protobuf/empty.proto";
+
+import "mcp/protobuf/annotations.proto";
+import "todo/v1/todo.proto";
+
+// Action choices for confirmation dialogs.
+enum ConfirmAction {
+  // Not specified.
+  CONFIRM_ACTION_UNSPECIFIED = 0;
+  // User confirms the action.
+  CONFIRM_ACTION_YES = 1;
+  // User cancels the action.
+  CONFIRM_ACTION_NO = 2;
+}
+
+// Confirmation form for creating a todo.
+message CreateTodoConfirmation {
+  // Confirm creation.
+  ConfirmAction confirm = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Confirmation form for updating a todo.
+message UpdateTodoConfirmation {
+  // Confirm update.
+  ConfirmAction confirm = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Confirmation form for deleting a todo.
+message DeleteTodoConfirmation {
+  // Confirm deletion.
+  ConfirmAction confirm = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Arguments for the "summarize_todos" prompt.
+message SummarizeTodosArgs {
+  // The user ID to summarize todos for.
+  string user = 1 [(google.api.field_behavior) = REQUIRED];
+}
+
+// Strategy options for prioritizing todos.
+enum PrioritizationStrategy {
+  // Not specified.
+  PRIORITIZATION_STRATEGY_UNSPECIFIED = 0;
+  // Prioritize by urgency.
+  PRIORITIZATION_STRATEGY_URGENCY = 1;
+  // Prioritize by deadline.
+  PRIORITIZATION_STRATEGY_DEADLINE = 2;
+  // Prioritize by effort.
+  PRIORITIZATION_STRATEGY_EFFORT = 3;
+}
+
+// Arguments for the "prioritize_todos" prompt.
+message PrioritizeTodosArgs {
+  // The user ID whose todos to prioritize.
+  string user = 1 [(google.api.field_behavior) = REQUIRED];
+  // Prioritization strategy.
+  PrioritizationStrategy strategy = 2;
+}
+

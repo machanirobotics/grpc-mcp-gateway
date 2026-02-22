@@ -32,7 +32,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "..", "proto", "gener
 
 from todo.v1.todo_service_pb2_mcp import register_todo_service_mcp_handler  # noqa: E402
 
-from impl import TodoServer  # noqa: E402
+from internal.impl import TodoServer  # noqa: E402
 
 
 # ---------------------------------------------------------------------------
@@ -84,7 +84,7 @@ async def test_smoke_todo_service(impl: TodoServer) -> None:
 
             # 2) CreateTodo
             create = await session.call_tool(
-                "todo_v1_TodoService_CreateTodo",
+                "todo_service-create_todo_v1",
                 {
                     "parent": "users/alice",
                     "todo_id": "task-1",
@@ -101,27 +101,27 @@ async def test_smoke_todo_service(impl: TodoServer) -> None:
 
             # 3) GetTodo
             get = await session.call_tool(
-                "todo_v1_TodoService_GetTodo",
+                "todo_service-get_todo_v1",
                 {"name": "users/alice/todos/task-1"},
             )
             assert json.loads(get.content[0].text)["title"] == "Buy groceries"
 
             # 4) ListTodos
             lst = await session.call_tool(
-                "todo_v1_TodoService_ListTodos",
+                "todo_service-list_todos_v1",
                 {"parent": "users/alice"},
             )
             assert "task-1" in lst.content[0].text
 
             # 5) DeleteTodo
             await session.call_tool(
-                "todo_v1_TodoService_DeleteTodo",
+                "todo_service-delete_todo_v1",
                 {"name": "users/alice/todos/task-1"},
             )
 
             # 6) Verify deletion
             lst2 = await session.call_tool(
-                "todo_v1_TodoService_ListTodos",
+                "todo_service-list_todos_v1",
                 {"parent": "users/alice"},
             )
             assert "task-1" not in lst2.content[0].text

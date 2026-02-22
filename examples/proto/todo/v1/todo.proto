@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package todo.v1;
 
-option go_package = "github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1";
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1";
 option java_multiple_files = true;
 option java_outer_classname = "TodoProto";
 option java_package = "com.todo.v1";
@@ -14,6 +14,23 @@ import "google/api/field_behavior.proto";
 import "google/api/resource.proto";
 import "google/protobuf/field_mask.proto";
 import "google/protobuf/timestamp.proto";
+
+// Represents a user in the system.
+message User {
+  option (google.api.resource) = {
+    type: "machanirobotics.app.todo.v1/User"
+    pattern: "users/{user}"
+    singular: "user"
+    plural: "users"
+  };
+
+  // The resource name of the user.
+  // Format: users/{user}
+  string name = 1 [(google.api.field_behavior) = IDENTIFIER];
+
+  // The display name of the user.
+  string display_name = 2 [(google.api.field_behavior) = OPTIONAL];
+}
 
 // Represents a todo item in the system.
 message Todo {

@@ -31,7 +31,10 @@ jobs:
           echo "VERSION=$TAG" >> "$GITHUB_ENV"
 
       - name: Run tests
-        run: go test -race ./cmd/... ./pkg/...
+        run: |
+          go test -race ./...
+          cd plugin && go test -race ./...
+          cd ../examples && go test -race ./...
 
       - name: Build binaries
         run: |
@@ -54,7 +57,7 @@ jobs:
             GOOS=$GOOS GOARCH=$GOARCH go build -trimpath \
               -ldflags "-s -w -X main.version=${VERSION}" \
               -o "dist/${output}" \
-              ./cmd/protoc-gen-mcp/
+              ./plugin/cmd/protoc-gen-mcp/
           done
 
       - name: Create archives
@@ -67,7 +70,6 @@ jobs:
               tar czf "${f}.tar.gz" "$f"
             fi
           done
-          # Generate checksums
           sha256sum *.tar.gz *.zip > checksums.txt
           cat checksums.txt
 
@@ -104,22 +106,36 @@ jobs:
             echo "EOF"
           } >> "$GITHUB_OUTPUT"
 
+      - name: Setup Buf CLI
+        uses: bufbuild/buf-setup-action@v1
+
+      - name: Push proto module to BSR
+        run: cd proto && buf push --label "$VERSION"
+        env:
+          BUF_TOKEN: ${{ secrets.BUF_TOKEN }}
+
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
           name: ${{ env.VERSION }}
           body: |
-            ## protoc-mcp-gen ${{ env.VERSION }}
+            ## grpc-mcp-gateway ${{ env.VERSION }}
 
             ### Installation
 
-            **Go install:**
+            **Go install (plugin):**
             ```bash
-            go install github.com/machanirobotics/protoc-mcp-gen/cmd/protoc-gen-mcp@${{ env.VERSION }}
+            go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp@${{ env.VERSION }}
             ```
 
             **Download binary:**
             Download the archive for your platform below, extract it, and place `protoc-gen-mcp` in your `$PATH`.
+
+            The version is baked into the binary via `-ldflags` and will appear in all generated file headers:
+            ```
+            protoc-gen-mcp --version
+            # protoc-gen-mcp ${{ env.VERSION }}
+            ```
 
             ### Checksums
             See `checksums.txt` for SHA-256 hashes of all archives.

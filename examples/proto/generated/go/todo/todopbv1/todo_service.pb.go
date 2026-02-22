@@ -7,6 +7,7 @@
 package todopbv1
 
 import (
+	_ "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -26,17 +27,24 @@ var File_todo_v1_todo_service_proto protoreflect.FileDescriptor
 
 const file_todo_v1_todo_service_proto_rawDesc = "" +
 	"\n" +
-	"\x1atodo/v1/todo_service.proto\x12\atodo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x12todo/v1/todo.proto2\xdd\x04\n" +
-	"\vTodoService\x12w\n" +
+	"\x1atodo/v1/todo_service.proto\x12\atodo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1emcp/protobuf/annotations.proto\x1a\x12todo/v1/todo.proto2\xbe\r\n" +
+	"\vTodoService\x12\xe4\x02\n" +
 	"\n" +
-	"CreateTodo\x12\x1a.todo.v1.CreateTodoRequest\x1a\r.todo.v1.Todo\">\xdaA\x13parent,todo,todo_id\x82\xd3\xe4\x93\x02\":\x04todo\"\x1a/v1/{parent=users/*}/todos\x12\\\n" +
-	"\aGetTodo\x12\x17.todo.v1.GetTodoRequest\x1a\r.todo.v1.Todo\")\xdaA\x04name\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/{name=users/*/todos/*}\x12o\n" +
-	"\tListTodos\x12\x19.todo.v1.ListTodosRequest\x1a\x1a.todo.v1.ListTodosResponse\"+\xdaA\x06parent\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/{parent=users/*}/todos\x12y\n" +
+	"CreateTodo\x12\x1a.todo.v1.CreateTodoRequest\x1a\r.todo.v1.Todo\"\xaa\x02\xdaA\x13parent,todo,todo_id\xca\xf3\x18\x91\x01\x12\x8e\x01Creates a new todo item under a user. Requires parent (e.g. users/alice), a todo object with title/description/priority, and a unique todo_id.\xda\xf3\x18R\n" +
+	"0Please confirm the todo details before creating.\x12\x1etodo.v1.CreateTodoConfirmation\x82\xd3\xe4\x93\x02\":\x04todo\"\x1a/v1/{parent=users/*}/todos\x12\x93\x02\n" +
+	"\aGetTodo\x12\x17.todo.v1.GetTodoRequest\x1a\r.todo.v1.Todo\"\xdf\x01\xdaA\x04name\xca\xf3\x18T\x12RRetrieves a single todo item by its resource name (e.g. users/alice/todos/abc123).\xd2\xf3\x18Z\n" +
+	"\x0fsummarize_todos\x12+Summarize all pending todo items for a user\x1a\x1atodo.v1.SummarizeTodosArgs\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/{name=users/*/todos/*}\x12\xb6\x02\n" +
+	"\tListTodos\x12\x19.todo.v1.ListTodosRequest\x1a\x1a.todo.v1.ListTodosResponse\"\xf1\x01\xdaA\x06parent\xca\xf3\x18T\x12RLists all todo items for a user. Supports pagination via page_size and page_token.\xd2\xf3\x18j\n" +
+	"\x10prioritize_todos\x129Suggest a priority ordering for a user's incomplete todos\x1a\x1btodo.v1.PrioritizeTodosArgs\x82\xd3\xe4\x93\x02\x1c\x12\x1a/v1/{parent=users/*}/todos\x12\xe5\x02\n" +
 	"\n" +
-	"UpdateTodo\x12\x1a.todo.v1.UpdateTodoRequest\x1a\r.todo.v1.Todo\"@\xdaA\x10todo,update_mask\x82\xd3\xe4\x93\x02':\x04todo2\x1f/v1/{todo.name=users/*/todos/*}\x12k\n" +
+	"UpdateTodo\x12\x1a.todo.v1.UpdateTodoRequest\x1a\r.todo.v1.Todo\"\xab\x02\xdaA\x10todo,update_mask\xca\xf3\x18\x93\x01\x12\x90\x01Updates an existing todo item. Send the todo with its resource name and the fields to update. Use update_mask to specify which fields to modify.\xda\xf3\x18O\n" +
+	"-Please confirm the changes to this todo item.\x12\x1etodo.v1.UpdateTodoConfirmation\x82\xd3\xe4\x93\x02':\x04todo2\x1f/v1/{todo.name=users/*/todos/*}\x12\xb3\x02\n" +
 	"\n" +
-	"DeleteTodo\x12\x1a.todo.v1.DeleteTodoRequest\x1a\x16.google.protobuf.Empty\")\xdaA\x04name\x82\xd3\xe4\x93\x02\x1c*\x1a/v1/{name=users/*/todos/*}\x1a\x1e\xcaA\x1bmachanirobotics.app.todo.v1B\x7f\n" +
-	"\vcom.todo.v1B\x10TodoServiceProtoP\x01Z\\github.com/machanirobotics/protoc-mcp-gen/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3"
+	"DeleteTodo\x12\x1a.todo.v1.DeleteTodoRequest\x1a\x16.google.protobuf.Empty\"\xf0\x01\xdaA\x04name\xca\xf3\x18U\x12SPermanently deletes a todo item by its resource name. This action cannot be undone.\xda\xf3\x18j\n" +
+	"HAre you sure you want to delete this todo? This action cannot be undone.\x12\x1etodo.v1.DeleteTodoConfirmation\x82\xd3\xe4\x93\x02\x1c*\x1a/v1/{name=users/*/todos/*}\x1a[\xcaA\x1bmachanirobotics.app.todo.v1\xc2\xf3\x189\n" +
+	"7\n" +
+	"\bTodo App\x12\x051.0.0\x1a$A simple todo management applicationB\x81\x01\n" +
+	"\vcom.todo.v1B\x10TodoServiceProtoP\x01Z^github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3"
 
 var file_todo_v1_todo_service_proto_goTypes = []any{
 	(*CreateTodoRequest)(nil), // 0: todo.v1.CreateTodoRequest

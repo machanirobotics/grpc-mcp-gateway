@@ -1,0 +1,40 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "PromptProto";
+option java_package = "com.mcp.protobuf";
+
+// MCPPrompt defines a reusable prompt template exposed at the service level.
+//
+// The arguments are defined as a proper proto message referenced by schema.
+// Field types, descriptions, required-ness, and enum values are all
+// derived from the referenced message's proto definition.
+//
+// Example:
+//   prompts: [
+//     {
+//       name: "summarize_todos"
+//       description: "Summarize all pending todo items for a user"
+//       schema: "todo.v1.SummarizeTodosArgs"
+//     }
+//   ]
+message MCPPrompt {
+  // Unique prompt name (e.g. "summarize_todos").
+  string name = 1;
+  // Human-readable description of what this prompt does.
+  string description = 2;
+  // Fully-qualified proto message name whose fields define the prompt arguments.
+  string schema = 3;
+}
+
+// MCPToolOptions configures an individual RPC method as an MCP tool.
+// Used as: option (mcp.protobuf.tool) = { ... };
+message MCPToolOptions {
+  // Override the auto-generated MCP tool name.
+  string name = 1;
+  // Override the tool description (defaults to the RPC's leading comment).
+  string description = 2;
+}

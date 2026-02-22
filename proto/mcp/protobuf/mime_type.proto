@@ -1,0 +1,32 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "MimeTypeProto";
+option java_package = "com.mcp.protobuf";
+
+// MCPMimeType enumerates common MIME types for MCP resources.
+enum MCPMimeType {
+  // Default; treated as application/json.
+  MCP_MIME_TYPE_UNSPECIFIED = 0;
+  // application/json
+  MCP_MIME_TYPE_APPLICATION_JSON = 1;
+  // text/plain
+  MCP_MIME_TYPE_TEXT_PLAIN = 2;
+  // text/html
+  MCP_MIME_TYPE_TEXT_HTML = 3;
+  // text/markdown
+  MCP_MIME_TYPE_TEXT_MARKDOWN = 4;
+  // application/xml
+  MCP_MIME_TYPE_APPLICATION_XML = 5;
+  // application/octet-stream
+  MCP_MIME_TYPE_APPLICATION_OCTET_STREAM = 6;
+  // application/pdf
+  MCP_MIME_TYPE_APPLICATION_PDF = 7;
+  // image/png
+  MCP_MIME_TYPE_IMAGE_PNG = 8;
+  // image/jpeg
+  MCP_MIME_TYPE_IMAGE_JPEG = 9;
+}
