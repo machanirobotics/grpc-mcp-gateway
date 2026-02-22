@@ -244,7 +244,7 @@ grpc-mcp-gateway/
 ├── go.work                         # Workspace (root + examples)
 ├── proto/                          # Publishable buf module (BSR)
 │   └── mcp/protobuf/              # MCP annotation .proto files
-├── internal/mcp/protobuf/         # Generated .pb.go (internal)
+├── mcp/protobuf/                  # Generated .pb.go (public, importable)
 ├── runtime/                       # Go runtime (server, config, schema helpers)
 ├── plugin/
 │   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)
