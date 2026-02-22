@@ -5,8 +5,8 @@ import (
 	"log"
 	"os"
 
-	"github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1"
-	"github.com/machanirobotics/grpc-mcp-gateway/runtime"
+	"github.com/machanirobotics/grpc-mcp-gateway/v2/examples/proto/generated/go/todo/todopbv1"
+	"github.com/machanirobotics/grpc-mcp-gateway/v2/runtime"
 )
 
 func main() {

@@ -97,8 +97,8 @@ const file_mcp_protobuf_elicitation_proto_rawDesc = "" +
 	"\x1emcp/protobuf/elicitation.proto\x12\fmcp.protobuf\"B\n" +
 	"\x0eMCPElicitation\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage\x12\x16\n" +
-	"\x06schema\x18\x02 \x01(\tR\x06schemaBo\n" +
-	"\x10com.mcp.protobufB\x10ElicitationProtoP\x01ZGgithub.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppbb\x06proto3"
+	"\x06schema\x18\x02 \x01(\tR\x06schemaBr\n" +
+	"\x10com.mcp.protobufB\x10ElicitationProtoP\x01ZJgithub.com/machanirobotics/grpc-mcp-gateway/v2/internal/mcp/protobuf;mcppbb\x06proto3"
 
 var (
 	file_mcp_protobuf_elicitation_proto_rawDescOnce sync.Once

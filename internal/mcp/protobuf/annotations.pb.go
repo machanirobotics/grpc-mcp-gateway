@@ -80,8 +80,8 @@ const file_mcp_protobuf_annotations_proto_rawDesc = "" +
 	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18\xb8\x8e\x03 \x01(\v2\x1f.mcp.protobuf.MCPServiceOptionsR\aservice\x88\x01\x01:U\n" +
 	"\x04tool\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPToolOptionsR\x04tool\x88\x01\x01:T\n" +
 	"\x06prompt\x12\x1e.google.protobuf.MethodOptions\x18\xba\x8e\x03 \x01(\v2\x17.mcp.protobuf.MCPPromptR\x06prompt\x88\x01\x01:c\n" +
-	"\velicitation\x12\x1e.google.protobuf.MethodOptions\x18\xbb\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPElicitationR\velicitation\x88\x01\x01Bo\n" +
-	"\x10com.mcp.protobufB\x10AnnotationsProtoP\x01ZGgithub.com/machanirobotics/grpc-mcp-gateway/internal/mcp/protobuf;mcppbb\x06proto3"
+	"\velicitation\x12\x1e.google.protobuf.MethodOptions\x18\xbb\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPElicitationR\velicitation\x88\x01\x01Br\n" +
+	"\x10com.mcp.protobufB\x10AnnotationsProtoP\x01ZJgithub.com/machanirobotics/grpc-mcp-gateway/v2/internal/mcp/protobuf;mcppbb\x06proto3"
 
 var file_mcp_protobuf_annotations_proto_goTypes = []any{
 	(*descriptorpb.ServiceOptions)(nil), // 0: google.protobuf.ServiceOptions
