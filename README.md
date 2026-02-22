@@ -4,7 +4,7 @@
 [![BSR](https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue)](https://buf.build/machanirobotics/grpc-mcp-gateway)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-**gRPC to MCP proxy generator following the [MCP Spec](https://spec.modelcontextprotocol.io/](https://modelcontextprotocol.io/specification/2025-03-26).**
+**gRPC to MCP proxy generator following the [MCP Specification](https://modelcontextprotocol.io/specification).**
 
 A `protoc` plugin and runtime that turns any gRPC service into a fully spec-compliant [Model Context Protocol](https://modelcontextprotocol.io/) server — tools, prompts, resources, and elicitation — in Go, Python, and Rust.
 
