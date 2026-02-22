@@ -238,20 +238,21 @@ Resources are auto-detected from `google.api.resource` annotations on proto mess
 
 ```
 grpc-mcp-gateway/
+├── go.mod                          # Single Go module
+├── go.work                         # Workspace (root + examples)
 ├── proto/                          # Publishable buf module (BSR)
 │   └── mcp/protobuf/              # MCP annotation .proto files
 ├── internal/mcp/protobuf/         # Generated .pb.go (internal)
 ├── runtime/                       # Go runtime (server, config, schema helpers)
 ├── plugin/
-│   ├── cmd/protoc-gen-mcp/        # Plugin binary
+│   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)
 │   └── generator/                 # Code generation (Go, Python, Rust)
 │       └── templates/             # go.tpl, python.tpl, rust.tpl
-├── examples/
+├── examples/                      # Separate module with replace directive
 │   ├── proto/                     # TodoService definition
 │   ├── go/                        # Go examples (http, stdio, sse, grpc-gateway)
 │   ├── python/                    # Python examples (http, stdio, sse)
 │   └── rust/                      # Rust examples (http, stdio, sse)
-├── go.work                        # Multi-module workspace
 └── .github/workflows/             # CI + release pipelines
 ```
 
