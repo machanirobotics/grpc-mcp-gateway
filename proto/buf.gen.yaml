@@ -1,6 +1,13 @@
 version: v2
 plugins:
+  # --- Go (pre-compiled, published as part of the Go module) ---
   - local: protoc-gen-go
     out: ..
     opt:
       - module=github.com/machanirobotics/grpc-mcp-gateway
+  # --- Python (pre-compiled, published as grpc-mcp-gateway-protos on PyPI) ---
+  - remote: buf.build/protocolbuffers/python
+    out: ../mcp/protobuf/python
+  # --- Rust (pre-compiled, published as mcp-protobuf crate) ---
+  - remote: buf.build/community/neoeinstein-prost
+    out: ../mcp/protobuf/rust/src/gen

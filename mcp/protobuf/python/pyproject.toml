@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=70.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "grpc-mcp-gateway-protos"
+version = "0.1.0"
+description = "Pre-compiled Protocol Buffer types for grpc-mcp-gateway (mcp.protobuf)"
+requires-python = ">=3.10"
+license = "Apache-2.0"
+keywords = ["grpc", "mcp", "protobuf", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Programming Language :: Python :: 3",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "protobuf>=5.29.0",
+    "googleapis-common-protos>=1.66.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/machanirobotics/grpc-mcp-gateway"
+Repository = "https://github.com/machanirobotics/grpc-mcp-gateway"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["mcp*"]

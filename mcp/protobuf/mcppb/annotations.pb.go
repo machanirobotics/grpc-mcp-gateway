@@ -81,7 +81,7 @@ const file_mcp_protobuf_annotations_proto_rawDesc = "" +
 	"\x04tool\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPToolOptionsR\x04tool\x88\x01\x01:T\n" +
 	"\x06prompt\x12\x1e.google.protobuf.MethodOptions\x18\xba\x8e\x03 \x01(\v2\x17.mcp.protobuf.MCPPromptR\x06prompt\x88\x01\x01:c\n" +
 	"\velicitation\x12\x1e.google.protobuf.MethodOptions\x18\xbb\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPElicitationR\velicitation\x88\x01\x01Bf\n" +
-	"\x10com.mcp.protobufB\x10AnnotationsProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf;mcppbb\x06proto3"
+	"\x10com.mcp.protobufB\x10AnnotationsProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppbb\x06proto3"
 
 var file_mcp_protobuf_annotations_proto_goTypes = []any{
 	(*descriptorpb.ServiceOptions)(nil), // 0: google.protobuf.ServiceOptions

@@ -83,8 +83,14 @@ test-rust:
 # Run all tests (Go + Python + Rust)
 test-all: test test-python test-rust
 
+# Generate pre-compiled proto libraries (Go + Python + Rust)
+generate-proto:
+    cd proto && buf generate
+    @echo '__path__ = __import__("pkgutil").extend_path(__path__, __name__)' > mcp/protobuf/python/mcp/__init__.py
+    @touch mcp/protobuf/python/mcp/protobuf/__init__.py
+
 # Rebuild the plugin and regenerate example proto code
-generate: install
+generate: generate-proto install
     cd examples && buf generate
 
 # Run all checks (fmt, vet, lint, test, build)
@@ -105,6 +111,22 @@ buf-push:
 # Push proto module with a specific label (e.g. a release tag)
 buf-push-label label:
     cd proto && buf push --label {{label}}
+
+# Build the Python proto package (sdist + wheel)
+build-pypi:
+    cd mcp/protobuf/python && python -m build
+
+# Publish Python proto library to PyPI
+publish-pypi: build-pypi
+    cd mcp/protobuf/python && twine upload dist/*
+
+# Dry-run publish Rust proto library to crates.io
+publish-crates-dry:
+    cd mcp/protobuf/rust && cargo publish --dry-run
+
+# Publish Rust proto library to crates.io
+publish-crates:
+    cd mcp/protobuf/rust && cargo publish
 
 # Create release archives for all platforms and push protos to BSR
 release version: clean (build-all version)
