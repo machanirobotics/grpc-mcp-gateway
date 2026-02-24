@@ -42,3 +42,8 @@ __pycache__/
 
 # Rust
 examples/rust/target/
+
+# C++ example build
+examples/cpp/server
+examples/cpp/build/
+examples/proto/generated/cpp/rust/target

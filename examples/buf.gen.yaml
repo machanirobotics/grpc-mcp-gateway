@@ -38,3 +38,9 @@ plugins:
     opt:
       - lang=rust
       - paths=source_relative
+  # --- C++ MCP bridge (header + cxx.rs) ---
+  - local: protoc-gen-mcp
+    out: proto/generated/cpp
+    opt:
+      - lang=cpp
+      - paths=source_relative

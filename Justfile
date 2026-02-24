@@ -80,8 +80,12 @@ test-python:
 test-rust:
     cd examples/rust && cargo check --all-targets
 
-# Run all tests (Go + Python + Rust)
-test-all: test test-python test-rust
+# Run C++ example build (Make)
+test-cpp:
+    cd examples/cpp && make
+
+# Run all tests (Go + Python + Rust + C++)
+test-all: test test-python test-rust test-cpp
 
 # Generate pre-compiled proto libraries (Go + Python + Rust)
 generate-proto:
@@ -89,9 +93,29 @@ generate-proto:
     @echo '__path__ = __import__("pkgutil").extend_path(__path__, __name__)' > mcp/protobuf/python/mcp/__init__.py
     @touch mcp/protobuf/python/mcp/protobuf/__init__.py
 
-# Rebuild the plugin and regenerate example proto code
+# Generate C++ proto stubs with local protoc (matches system libprotobuf)
+generate-cpp:
+    cd examples && buf export proto -o /tmp/proto_export
+    mkdir -p examples/proto/generated/cpp
+    rm -rf examples/proto/generated/cpp/todo examples/proto/generated/cpp/google examples/proto/generated/cpp/mcp
+    protoc -I /tmp/proto_export \
+        --cpp_out=examples/proto/generated/cpp \
+        --grpc_out=examples/proto/generated/cpp \
+        --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` \
+        /tmp/proto_export/mcp/protobuf/*.proto /tmp/proto_export/google/api/*.proto /tmp/proto_export/todo/v1/*.proto
+
+# Build C++ example with Bazel
+build-cpp-bazel:
+    cd examples/cpp && bazel build //...
+
+# Build C++ example with Make
+build-cpp:
+    cd examples/cpp && make
+
+# Rebuild the plugin and regenerate all example proto code
 generate: generate-proto install
     cd examples && buf generate
+    just generate-cpp
 
 # Run all checks (fmt, vet, lint, test, build)
 check: fmt-check vet lint test build

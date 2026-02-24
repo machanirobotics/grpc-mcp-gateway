@@ -16,11 +16,12 @@ const (
 	Go     Language = "go"
 	Python Language = "python"
 	Rust   Language = "rust"
+	Cpp    Language = "cpp"
 )
 
 // SupportedLanguages returns all languages the factory can generate for.
 func SupportedLanguages() []Language {
-	return []Language{Go, Python, Rust}
+	return []Language{Go, Python, Rust, Cpp}
 }
 
 // GenerateOptions holds configuration for a single file generation run.
@@ -41,6 +42,8 @@ func GenerateFile(f *protogen.File, gen *protogen.Plugin, opts GenerateOptions) 
 		NewPythonFileGenerator(f, gen).Generate()
 	case Rust:
 		NewRustFileGenerator(f, gen).Generate()
+	case Cpp:
+		NewCppFileGenerator(f, gen).Generate()
 	default:
 		return fmt.Errorf("unsupported language: %q (supported: %s)", opts.Lang, supportedList())
 	}

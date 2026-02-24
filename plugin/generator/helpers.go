@@ -45,6 +45,28 @@ func rsStringEscape(s string) string {
 	return s
 }
 
+// cppStringEscape escapes backslashes and double quotes for use inside a C++ "..." string literal.
+func cppStringEscape(s string) string {
+	s = strings.ReplaceAll(s, `\`, `\\`)
+	s = strings.ReplaceAll(s, `"`, `\"`)
+	return s
+}
+
+// cppTypeName returns the C++ type name for a protobuf message relative to
+// currentPkg. Same-package types use the short name (with _ for nested types);
+// cross-package types use the fully-qualified :: form.
+func cppTypeName(msg *protogen.Message, currentPkg string) string {
+	msgPkg := string(msg.Desc.ParentFile().Package())
+	fullName := string(msg.Desc.FullName())
+	localName := strings.TrimPrefix(fullName, msgPkg+".")
+	cppLocal := strings.ReplaceAll(localName, ".", "_")
+	if msgPkg == currentPkg {
+		return cppLocal
+	}
+	cppNs := "::" + strings.ReplaceAll(msgPkg, ".", "::")
+	return cppNs + "::" + cppLocal
+}
+
 // protoPyModule returns the Python module path for a protobuf message.
 // e.g. store.apps.todo.v1.Todo -> store.apps.todo.v1.todo_pb2
 func protoPyModule(msg *protogen.Message) string {
