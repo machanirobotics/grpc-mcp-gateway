@@ -1359,9 +1359,9 @@ dependencies = [
 
 [[package]]
 name = "tonic-reflection"
-version = "0.14.4"
+version = "0.14.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "91e5f75c058c397bf4ecada0fe0a2299c49c252fcf484f4a2f47279b6fa7026b"
+checksum = "aaf0685a51e6d02b502ba0764002e766b7f3042aed13d9234925b6ffbfa3fca7"
 dependencies = [
  "prost",
  "prost-types",
