@@ -8,11 +8,11 @@
 
 **gRPC to MCP proxy generator following the [MCP Specification](https://modelcontextprotocol.io/specification).**
 
-A `protoc` plugin and runtime that turns any gRPC service into a fully spec-compliant [Model Context Protocol](https://modelcontextprotocol.io/) server — tools, prompts, resources, and elicitation — in Go, Python, and Rust.
+A `protoc` plugin and runtime that turns any gRPC service into a fully spec-compliant [Model Context Protocol](https://modelcontextprotocol.io/) server — tools, prompts, resources, and elicitation — in Go, Python, Rust, and C++.
 
 ## Features
 
-- **Multi-language** — Generate MCP server code for Go, Python, and Rust from a single `.proto` file
+- **Multi-language** — Generate MCP server code for Go, Python, Rust, and C++ from a single `.proto` file
 - **Tools** — Every unary RPC becomes an MCP tool with a JSON Schema derived from the protobuf request message
 - **Prompts** — Attach prompt templates to RPCs with schema-validated arguments via `(mcp.protobuf.prompt)`
 - **Resources** — Auto-detect MCP resources from `google.api.resource` annotations
@@ -26,6 +26,7 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 | **Go**     | `*_service.pb.mcp.go`  | [`examples/go`](examples/go)         |
 | **Python** | `*_service_pb2_mcp.py` | [`examples/python`](examples/python) |
 | **Rust**   | `*_service.mcp.rs`     | [`examples/rust`](examples/rust)     |
+| **C++**    | `*_service.mcp.h/cc` + Rust bridge | [`examples/cpp`](examples/cpp) |
 
 ## Architecture
 
@@ -34,12 +35,15 @@ graph LR
     Proto[".proto + MCP annotations"] -->|buf generate| GenGo["Go MCP stubs"]
     Proto -->|buf generate| GenPy["Python MCP stubs"]
     Proto -->|buf generate| GenRs["Rust MCP stubs"]
+    Proto -->|buf generate| GenCpp["C++ MCP bridge"]
     GenGo --> GoSrv["Go Server"]
     GenPy --> PySrv["Python Server"]
     GenRs --> RsSrv["Rust Server"]
+    GenCpp --> CppSrv["C++ Server"]
     GoSrv -->|stdio / SSE / streamable-http| Client["MCP Client / LLM"]
     PySrv -->|stdio / SSE / streamable-http| Client
     RsSrv -->|stdio / SSE / streamable-http| Client
+    CppSrv -->|stdio / streamable-http| Client
 ```
 
 ## How It Works
@@ -168,6 +172,11 @@ plugins:
   - local: protoc-gen-mcp
     out: generated/rust
     opt: [lang=rust, paths=source_relative]
+
+  # --- C++ (Rust bridge + C++ gRPC client) ---
+  - local: protoc-gen-mcp
+    out: generated/cpp
+    opt: [lang=cpp, paths=source_relative]
 ```
 
 ```bash
@@ -188,6 +197,10 @@ npx @modelcontextprotocol/inspector -- uv run python stdio/main.py
 # Rust
 cd examples/rust && cargo build --bin stdio
 npx @modelcontextprotocol/inspector -- ./target/debug/stdio
+
+# C++
+cd examples/cpp && make
+MCP_TRANSPORT=stdio npx @modelcontextprotocol/inspector -- ./server
 ```
 
 ## MCP Annotations
@@ -265,21 +278,22 @@ grpc-mcp-gateway/
 ├── runtime/                       # Go runtime (server, config, schema helpers)
 ├── plugin/
 │   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)
-│   └── generator/                 # Code generation (Go, Python, Rust)
-│       └── templates/             # go.tpl, python.tpl, rust.tpl
+│   └── generator/                 # Code generation (Go, Python, Rust, C++)
+│       └── templates/             # go.tpl, python.tpl, rust.tpl, cpp/*.tpl
 ├── examples/                      # Separate module with replace directive
 │   ├── proto/                     # TodoService definition
 │   ├── go/                        # Go examples (http, stdio, sse, grpc-gateway)
 │   ├── python/                    # Python examples (http, stdio, sse)
-│   └── rust/                      # Rust examples (http, stdio, sse)
+│   ├── rust/                      # Rust examples (http, stdio, sse)
+│   └── cpp/                       # C++ example (Make, gRPC + MCP via Rust bridge)
 └── .github/workflows/             # CI + release pipelines
 ```
 
 ## Plugin Options
 
-| Option           | Values                 | Description                                              |
-| ---------------- | ---------------------- | -------------------------------------------------------- |
-| `lang`           | `go`, `python`, `rust` | Target language for generated code                       |
+| Option           | Values                      | Description                                              |
+| ---------------- | --------------------------- | -------------------------------------------------------- |
+| `lang`           | `go`, `python`, `rust`, `cpp` | Target language for generated code                       |
 | `module`         | Go module path         | Go module prefix for output path resolution              |
 | `package_suffix` | any string (Go only)   | Sub-package suffix for generated `.pb.mcp.go` files      |
 | `paths`          | `source_relative`      | Place output relative to the proto source (Python, Rust) |
@@ -288,15 +302,15 @@ grpc-mcp-gateway/
 
 For each proto service, the plugin generates:
 
-| Feature             | Go                                                  | Python                                 | Rust                              |
-| ------------------- | --------------------------------------------------- | -------------------------------------- | --------------------------------- |
-| **Tools** (per RPC) | `s.AddTool(...)`                                    | `@server.call_tool()`                  | `ServerHandler::call_tool()`      |
-| **Prompts**         | `s.AddPrompt(...)`                                  | `@server.get_prompt()`                 | `ServerHandler::get_prompt()`     |
-| **Resources**       | `s.AddResource(...)` / `s.AddResourceTemplate(...)` | `@server.list_resources()`             | `ServerHandler::list_resources()` |
-| **Elicitation**     | `runtime.RunElicitation(...)`                       | `session.elicit(...)`                  | `peer.create_elicitation(...)`    |
-| **Serve function**  | `ServeTodoServiceMCP()`                             | `serve_todo_service_mcp()`             | `serve_todo_service_mcp()`        |
-| **gRPC forwarding** | `ForwardToTodoServiceMCPClient()`                   | `forward_to_todo_service_mcp_client()` | —                                 |
-| **Interface/trait** | `TodoServiceMCPServer`                              | `TodoServiceMCPServer` (Protocol)      | `TodoServiceMcpServer` (trait)    |
+| Feature             | Go                                                  | Python                                 | Rust                              | C++                               |
+| ------------------- | --------------------------------------------------- | -------------------------------------- | --------------------------------- | --------------------------------- |
+| **Tools** (per RPC) | `s.AddTool(...)`                                    | `@server.call_tool()`                  | `ServerHandler::call_tool()`      | `TodoServiceMcpImpl` (cxx FFI)    |
+| **Prompts**         | `s.AddPrompt(...)`                                  | `@server.get_prompt()`                 | `ServerHandler::get_prompt()`     | —                                 |
+| **Resources**       | `s.AddResource(...)` / `s.AddResourceTemplate(...)` | `@server.list_resources()`             | `ServerHandler::list_resources()` | —                                 |
+| **Elicitation**     | `runtime.RunElicitation(...)`                       | `session.elicit(...)`                  | `peer.create_elicitation(...)`    | —                                 |
+| **Serve function**  | `ServeTodoServiceMCP()`                             | `serve_todo_service_mcp()`             | `serve_todo_service_mcp()`        | `start_*_mcp_http` / `_stdio`     |
+| **gRPC forwarding** | `ForwardToTodoServiceMCPClient()`                   | `forward_to_todo_service_mcp_client()` | —                                 | In-process (C++ gRPC server)      |
+| **Interface/trait** | `TodoServiceMCPServer`                              | `TodoServiceMCPServer` (Protocol)      | `TodoServiceMcpServer` (trait)    | `TodoServiceMcpImpl` (C++ class)  |
 
 ### JSON Schema derivation
 
@@ -383,6 +397,7 @@ The [`examples/`](examples/) directory contains a complete TodoService implement
 | Go       | [`examples/go/`](examples/go)         | http, stdio, sse, grpc-gateway | `go test ./examples/go/http/`           |
 | Python   | [`examples/python/`](examples/python) | http, stdio, sse               | `uv run python -m pytest smoke_test.py` |
 | Rust     | [`examples/rust/`](examples/rust)     | http, stdio, sse               | `cargo check`                           |
+| C++      | [`examples/cpp/`](examples/cpp)       | streamable-http, stdio         | `make`                                  |
 
 See each language's README for detailed setup and run instructions.
 
