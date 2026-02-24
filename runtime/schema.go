@@ -64,6 +64,9 @@ func PrepareToolWithExtras(tool *mcp.Tool, extras []ExtraProperty) *mcp.Tool {
 }
 
 // TextResult creates a CallToolResult containing a single text content block.
+// Use for successful tool responses:
+//
+//	return runtime.TextResult(string(jsonBytes)), nil
 func TextResult(text string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{&mcp.TextContent{Text: text}},
@@ -71,6 +74,7 @@ func TextResult(text string) *mcp.CallToolResult {
 }
 
 // ErrorResult creates a CallToolResult flagged as an error.
+// Prefer HandleError for gRPC errors; use ErrorResult for custom error messages.
 func ErrorResult(text string) *mcp.CallToolResult {
 	return &mcp.CallToolResult{
 		Content: []mcp.Content{&mcp.TextContent{Text: text}},

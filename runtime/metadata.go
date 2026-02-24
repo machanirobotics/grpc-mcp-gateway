@@ -9,11 +9,11 @@ import (
 )
 
 // HeaderMapping maps an HTTP header name to a gRPC metadata key.
+// Used with MCPServerConfig.HeaderMappings to forward headers from MCP HTTP
+// requests into gRPC outgoing metadata. Use DefaultHeaderMappings() for common ones.
 type HeaderMapping struct {
-	// HTTPHeader is the HTTP header name to read (case-insensitive).
-	HTTPHeader string
-	// GRPCKey is the gRPC metadata key to write (lowercase).
-	GRPCKey string
+	HTTPHeader string // HTTP header name to read (case-insensitive)
+	GRPCKey    string // gRPC metadata key to write (use lowercase)
 }
 
 // httpHeadersKey is the context key for storing extracted HTTP headers.

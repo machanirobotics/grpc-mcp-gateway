@@ -211,3 +211,43 @@ jobs:
         run: cargo publish
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+
+  update-docs:
+    name: Update docs with release version
+    runs-on: ubuntu-latest
+    needs: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Update version in docs
+        run: |
+          VERSION="${GITHUB_REF#refs/tags/v}"
+          echo "Updating docs to version $VERSION"
+
+          # Main README - mcp-protobuf Cargo version
+          sed -i 's/mcp-protobuf = "[^"]*"/mcp-protobuf = "'"$VERSION"'"/' README.md
+
+          # Python README - pip install version
+          sed -i 's/grpc-mcp-gateway-protos==[0-9]\+\.[0-9]\+\.[0-9]\+/grpc-mcp-gateway-protos=='"$VERSION"'/' mcp/protobuf/python/README.md
+          sed -i 's/v[0-9]\+\.[0-9]\+\.[0-9]\+/v'"$VERSION"'/' mcp/protobuf/python/README.md
+
+          # Rust README - mcp-protobuf Cargo version
+          sed -i 's/mcp-protobuf = "[^"]*"/mcp-protobuf = "'"$VERSION"'"/' mcp/protobuf/rust/README.md
+
+      - name: Commit and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add README.md mcp/protobuf/python/README.md mcp/protobuf/rust/README.md
+          if git diff --staged --quiet; then
+            echo "No doc changes needed"
+          else
+            git commit -m "docs: update version references to ${{ github.ref_name }}"
+            git push
+          fi

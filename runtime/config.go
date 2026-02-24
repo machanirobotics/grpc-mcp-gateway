@@ -16,20 +16,34 @@ const (
 type Option func(*Config)
 
 // Config holds runtime configuration for MCP handlers.
+// It is typically built via ApplyOptions and passed to Register*MCPHandler.
 type Config struct {
+	// ExtraProperties are injected into tool schemas and extracted from
+	// request arguments into context. Use WithExtraProperties to add them.
 	ExtraProperties []ExtraProperty
-	HeaderMappings  []HeaderMapping
-	Transport       Transport
-	Addr            string
+	// HeaderMappings configure HTTP header to gRPC metadata forwarding.
+	// Use WithHeaderMappings or DefaultHeaderMappings().
+	HeaderMappings []HeaderMapping
+	// Transport selects the wire protocol (stdio, streamable-http, sse).
+	Transport Transport
+	// Addr is the listen address for HTTP transports (default ":8080").
+	Addr string
 }
 
 // ExtraProperty defines an additional property to inject into tool schemas
 // and extract from request arguments into context.
+//
+// Example: add an "api_key" property that gets extracted into context:
+//
+//	runtime.WithExtraProperties(runtime.ExtraProperty{
+//	    Name: "api_key", Description: "API key for auth", Required: true,
+//	    ContextKey: contextKeyForAPIKey,
+//	})
 type ExtraProperty struct {
-	Name        string
-	Description string
-	Required    bool
-	ContextKey  any
+	Name        string // JSON property name in tool arguments
+	Description string // Shown in tool schema
+	Required    bool   // If true, adds to schema.required
+	ContextKey  any    // Key for context.WithValue(ctx, ContextKey, value)
 }
 
 // WithExtraProperties returns an Option that adds extra properties to tool

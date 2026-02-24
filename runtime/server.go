@@ -56,8 +56,13 @@ func NewMCPServer(cfg *MCPServerConfig) *mcp.Server {
 	return mcp.NewServer(&mcp.Implementation{Name: cfg.Name, Version: cfg.Version}, opts)
 }
 
-// ParseTransports splits a comma-separated transport string (e.g.
-// "stdio,streamable-http") into a []Transport slice.
+// ParseTransports splits a comma-separated transport string into a []Transport slice.
+// Use with MCP_TRANSPORT env var:
+//
+//	transports := runtime.ParseTransports(os.Getenv("MCP_TRANSPORT"))
+//	if len(transports) == 0 {
+//	    transports = []runtime.Transport{runtime.TransportStreamableHTTP}
+//	}
 func ParseTransports(s string) []Transport {
 	parts := strings.Split(s, ",")
 	out := make([]Transport, 0, len(parts))

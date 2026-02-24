@@ -121,13 +121,14 @@ func CompletionHandlerFromEnums(enumValues map[string][]string) func(context.Con
 	}
 }
 
-// ElicitField describes a field for an elicitation request.
+// ElicitField describes a field for an elicitation (confirmation) request.
+// Used with RunElicitation to build a form shown to the user before tool execution.
 type ElicitField struct {
-	Name        string
-	Description string
-	Required    bool
-	Type        string // "string", "number", "boolean"
-	EnumValues  []string
+	Name        string   // JSON property name
+	Description string   // Shown in the form
+	Required    bool     // If true, user must provide a value
+	Type        string   // JSON Schema type: "string", "number", "boolean"
+	EnumValues  []string // Optional: restrict to these values (autocomplete)
 }
 
 // RunElicitation performs an elicitation request on the server session,

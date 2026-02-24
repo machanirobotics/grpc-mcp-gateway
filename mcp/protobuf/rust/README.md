@@ -4,16 +4,17 @@ Pre-compiled Protocol Buffer types for [grpc-mcp-gateway](https://github.com/mac
 
 ## Install
 
-```toml
-# Cargo.toml
-[dependencies]
-mcp-protobuf = "0.1"
-```
-
-Or:
+Use the version matching the [grpc-mcp-gateway release](https://github.com/machanirobotics/grpc-mcp-gateway/releases) you use. See [crates.io](https://crates.io/crates/mcp-protobuf) for the current version.
 
 ```bash
 cargo add mcp-protobuf
+```
+
+Or add to `Cargo.toml` (replace with the version from the latest release):
+
+```toml
+[dependencies]
+mcp-protobuf = "2.0"   # check crates.io for latest
 ```
 
 ## What's included
@@ -37,13 +38,7 @@ Import the crate to use MCP-annotated protos in your Rust project:
 use mcp_protobuf::*;
 ```
 
-When using [protoc-gen-mcp](https://github.com/machanirobotics/grpc-mcp-gateway) with `lang=rust`, the generated code will depend on this crate. Add it to your `Cargo.toml`:
-
-```toml
-[dependencies]
-mcp-protobuf = "0.1"
-# Your generated MCP stubs will use it
-```
+When using [protoc-gen-mcp](https://github.com/machanirobotics/grpc-mcp-gateway) with `lang=rust`, the generated code will depend on this crate. Use the same version as your grpc-mcp-gateway release (see [crates.io](https://crates.io/crates/mcp-protobuf) for latest).
 
 ## Dependencies
 

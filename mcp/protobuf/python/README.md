@@ -4,8 +4,14 @@ Pre-compiled Protocol Buffer types for [grpc-mcp-gateway](https://github.com/mac
 
 ## Install
 
+Use the version matching the [grpc-mcp-gateway release](https://github.com/machanirobotics/grpc-mcp-gateway/releases) you use:
+
 ```bash
+# Latest
 pip install grpc-mcp-gateway-protos
+
+# Or pin to a specific release (e.g. v2.0.0)
+pip install grpc-mcp-gateway-protos==2.0.0
 ```
 
 ## What's included

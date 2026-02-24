@@ -14,8 +14,16 @@ type grpcError struct {
 	Details []any  `json:"details,omitempty"`
 }
 
-// HandleError converts a gRPC or ConnectRPC error into an MCP tool error
-// result.  If err is nil both return values are nil.
+// HandleError converts a gRPC or ConnectRPC error into an MCP tool error result.
+// Use it in tool handlers when your gRPC call fails:
+//
+//	resp, err := srv.CreateTodo(ctx, req)
+//	if err != nil {
+//	    return runtime.HandleError(err)
+//	}
+//
+// If err is nil both return values are nil. gRPC status codes are preserved
+// in the JSON error payload.
 func HandleError(err error) (*mcp.CallToolResult, error) {
 	if err == nil {
 		return nil, nil

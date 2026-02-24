@@ -2,6 +2,7 @@
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev/)
 [![PyPI](https://img.shields.io/pypi/v/grpc-mcp-gateway-protos?logo=python&label=PyPI)](https://pypi.org/project/grpc-mcp-gateway-protos)
+[![Go Reference](https://pkg.go.dev/badge/github.com/machanirobotics/grpc-mcp-gateway.svg)](https://pkg.go.dev/github.com/machanirobotics/grpc-mcp-gateway)
 [![Crates.io](https://img.shields.io/crates/v/mcp-protobuf?logo=rust&label=crates.io)](https://crates.io/crates/mcp-protobuf)
 [![BSR](https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue)](https://buf.build/machanirobotics/grpc-mcp-gateway)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
@@ -21,12 +22,12 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 - **gRPC Gateway** — Forward MCP tool calls to a remote gRPC server (Go)
 - **Published Protos** — Import annotations from [`buf.build/machanirobotics/grpc-mcp-gateway`](https://buf.build/machanirobotics/grpc-mcp-gateway), or install pre-compiled types from [PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/) / [crates.io](https://crates.io/crates/mcp-protobuf)
 
-| Language   | Generated File         | Example                              |
-| ---------- | ---------------------- | ------------------------------------ |
-| **Go**     | `*_service.pb.mcp.go`  | [`examples/go`](examples/go)         |
-| **Python** | `*_service_pb2_mcp.py` | [`examples/python`](examples/python) |
-| **Rust**   | `*_service.mcp.rs`     | [`examples/rust`](examples/rust)     |
-| **C++**    | `*_service.mcp.h/cc` + Rust bridge | [`examples/cpp`](examples/cpp) |
+| Language   | Generated File                     | Example                              |
+| ---------- | ---------------------------------- | ------------------------------------ |
+| **Go**     | `*_service.pb.mcp.go`              | [`examples/go`](examples/go)         |
+| **Python** | `*_service_pb2_mcp.py`             | [`examples/python`](examples/python) |
+| **Rust**   | `*_service.mcp.rs`                 | [`examples/rust`](examples/rust)     |
+| **C++**    | `*_service.mcp.h/cc` + Rust bridge | [`examples/cpp`](examples/cpp)       |
 
 ## Architecture
 
@@ -83,11 +84,11 @@ Or download a binary from [GitHub Releases](https://github.com/machanirobotics/g
 
 The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled libraries so generated code can resolve its imports at runtime — just like `googleapis-common-protos` for Google API types.
 
-| Language | Package | Install |
-| -------- | ------- | ------- |
-| **Go** | [`mcp/protobuf/mcppb`](mcp/protobuf/mcppb) | `go get github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb` |
-| **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos` |
-| **Rust** | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf) | `cargo add mcp-protobuf` |
+| Language   | Package                                                                        | Install                                                                 |
+| ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
+| **Go**     | [`mcp/protobuf/mcppb`](mcp/protobuf/README.md)                                 | `go get github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb` |
+| **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos`                                   |
+| **Rust**   | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf)                        | `cargo add mcp-protobuf`                                                |
 
 **Python** ([PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/)) — Add to your project and import to register proto extensions:
 
@@ -96,11 +97,11 @@ The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled librar
 import mcp.protobuf.annotations_pb2  # noqa: F401
 ```
 
-**Rust** ([crates.io](https://crates.io/crates/mcp-protobuf)) — Add to `Cargo.toml`; generated MCP stubs use it automatically:
+**Rust** ([crates.io](https://crates.io/crates/mcp-protobuf)) — Add to `Cargo.toml`; use the version matching the [latest release](https://github.com/machanirobotics/grpc-mcp-gateway/releases):
 
 ```toml
 [dependencies]
-mcp-protobuf = "0.1"
+mcp-protobuf = "2"   # or cargo add mcp-protobuf for latest
 ```
 
 ## Quick Start
@@ -286,10 +287,10 @@ grpc-mcp-gateway/
 ├── proto/                          # Publishable buf module (BSR)
 │   └── mcp/protobuf/              # MCP annotation .proto source files
 ├── mcp/protobuf/                  # Pre-compiled proto libraries
-│   ├── mcppb/                     # Go (.pb.go) — importable as mcppb
+│   ├── mcppb/                     # Go (.pb.go) — see [mcp/protobuf/README.md](mcp/protobuf/README.md)
 │   ├── python/                    # Python (PyPI: grpc-mcp-gateway-protos)
 │   └── rust/                      # Rust (crates.io: mcp-protobuf)
-├── runtime/                       # Go runtime (server, config, schema helpers)
+├── runtime/                       # Go runtime — [README](runtime/README.md)
 ├── plugin/
 │   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)
 │   └── generator/                 # Code generation (Go, Python, Rust, C++)
@@ -305,26 +306,26 @@ grpc-mcp-gateway/
 
 ## Plugin Options
 
-| Option           | Values                      | Description                                              |
-| ---------------- | --------------------------- | -------------------------------------------------------- |
+| Option           | Values                        | Description                                              |
+| ---------------- | ----------------------------- | -------------------------------------------------------- |
 | `lang`           | `go`, `python`, `rust`, `cpp` | Target language for generated code                       |
-| `module`         | Go module path         | Go module prefix for output path resolution              |
-| `package_suffix` | any string (Go only)   | Sub-package suffix for generated `.pb.mcp.go` files      |
-| `paths`          | `source_relative`      | Place output relative to the proto source (Python, Rust) |
+| `module`         | Go module path                | Go module prefix for output path resolution              |
+| `package_suffix` | any string (Go only)          | Sub-package suffix for generated `.pb.mcp.go` files      |
+| `paths`          | `source_relative`             | Place output relative to the proto source (Python, Rust) |
 
 ## Generated Code
 
 For each proto service, the plugin generates:
 
-| Feature             | Go                                                  | Python                                 | Rust                              | C++                               |
-| ------------------- | --------------------------------------------------- | -------------------------------------- | --------------------------------- | --------------------------------- |
-| **Tools** (per RPC) | `s.AddTool(...)`                                    | `@server.call_tool()`                  | `ServerHandler::call_tool()`      | `TodoServiceMcpImpl` (cxx FFI)    |
-| **Prompts**         | `s.AddPrompt(...)`                                  | `@server.get_prompt()`                 | `ServerHandler::get_prompt()`     | —                                 |
-| **Resources**       | `s.AddResource(...)` / `s.AddResourceTemplate(...)` | `@server.list_resources()`             | `ServerHandler::list_resources()` | —                                 |
-| **Elicitation**     | `runtime.RunElicitation(...)`                       | `session.elicit(...)`                  | `peer.create_elicitation(...)`    | —                                 |
-| **Serve function**  | `ServeTodoServiceMCP()`                             | `serve_todo_service_mcp()`             | `serve_todo_service_mcp()`        | `start_*_mcp_http` / `_stdio`     |
-| **gRPC forwarding** | `ForwardToTodoServiceMCPClient()`                   | `forward_to_todo_service_mcp_client()` | —                                 | In-process (C++ gRPC server)      |
-| **Interface/trait** | `TodoServiceMCPServer`                              | `TodoServiceMCPServer` (Protocol)      | `TodoServiceMcpServer` (trait)    | `TodoServiceMcpImpl` (C++ class)  |
+| Feature             | Go                                                  | Python                                 | Rust                              | C++                              |
+| ------------------- | --------------------------------------------------- | -------------------------------------- | --------------------------------- | -------------------------------- |
+| **Tools** (per RPC) | `s.AddTool(...)`                                    | `@server.call_tool()`                  | `ServerHandler::call_tool()`      | `TodoServiceMcpImpl` (cxx FFI)   |
+| **Prompts**         | `s.AddPrompt(...)`                                  | `@server.get_prompt()`                 | `ServerHandler::get_prompt()`     | —                                |
+| **Resources**       | `s.AddResource(...)` / `s.AddResourceTemplate(...)` | `@server.list_resources()`             | `ServerHandler::list_resources()` | —                                |
+| **Elicitation**     | `runtime.RunElicitation(...)`                       | `session.elicit(...)`                  | `peer.create_elicitation(...)`    | —                                |
+| **Serve function**  | `ServeTodoServiceMCP()`                             | `serve_todo_service_mcp()`             | `serve_todo_service_mcp()`        | `start_*_mcp_http` / `_stdio`    |
+| **gRPC forwarding** | `ForwardToTodoServiceMCPClient()`                   | `forward_to_todo_service_mcp_client()` | —                                 | In-process (C++ gRPC server)     |
+| **Interface/trait** | `TodoServiceMCPServer`                              | `TodoServiceMCPServer` (Protocol)      | `TodoServiceMcpServer` (trait)    | `TodoServiceMcpImpl` (C++ class) |
 
 ### JSON Schema derivation
 

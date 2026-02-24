@@ -7,12 +7,11 @@ import (
 )
 
 // Endpoint represents an MCP server endpoint.
+// Use ServerEndpoint to compute it from MCPServerConfig.
 type Endpoint struct {
-	// Protocol is "stdio", "http", or "https".
-	Protocol  string
-	Transport string
-	// URL is the full endpoint URL. Empty for stdio.
-	URL string
+	Protocol  string // "stdio", "http", or "https"
+	Transport string // "stdio", "streamable-http", or "sse"
+	URL       string // Full URL (e.g. "http://localhost:8082/todo/v1/todoservice/mcp"). Empty for stdio.
 }
 
 // ResolveBasePath returns the effective BasePath for a given config and generated default.
@@ -31,8 +30,14 @@ func PreferGeneratedBasePath(generatedDefault string, cfg *MCPServerConfig) stri
 }
 
 // ServerEndpoint returns the endpoint for an MCP server based on its config.
-// For stdio transport, it returns Endpoint{Protocol: "stdio", URL: ""}.
-// For HTTP transports, it returns Endpoint{Protocol: "http|https", URL: "http://host:port/path"}.
+// Use to log the URL before starting:
+//
+//	if ep, err := runtime.ServerEndpoint(cfg); err == nil {
+//	    log.Printf("MCP listening on %s", ep.URL)
+//	}
+//
+// For stdio transport, URL is empty. For HTTP, host/port come from Addr or
+// MCP_SERVER_HOST, MCP_SERVER_PORT env vars.
 func ServerEndpoint(cfg *MCPServerConfig) (*Endpoint, error) {
 	// Detect if we're in stdio-only mode.
 	hasStdio := cfg.Transport == TransportStdio || (len(cfg.Transports) > 0 && func() bool {
