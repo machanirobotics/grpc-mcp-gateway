@@ -89,6 +89,20 @@ The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled librar
 | **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos` |
 | **Rust** | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf) | `cargo add mcp-protobuf` |
 
+**Python** ([PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/)) — Add to your project and import to register proto extensions:
+
+```python
+# Required for MCP-annotated protos
+import mcp.protobuf.annotations_pb2  # noqa: F401
+```
+
+**Rust** ([crates.io](https://crates.io/crates/mcp-protobuf)) — Add to `Cargo.toml`; generated MCP stubs use it automatically:
+
+```toml
+[dependencies]
+mcp-protobuf = "0.1"
+```
+
 ## Quick Start
 
 ### 1. Add the proto dependency

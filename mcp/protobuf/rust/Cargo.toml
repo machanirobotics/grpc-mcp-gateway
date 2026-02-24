@@ -4,11 +4,12 @@ version = "0.1.0"
 edition = "2021"
 rust-version = "1.75"
 description = "Pre-compiled Protocol Buffer types for grpc-mcp-gateway (mcp.protobuf)"
+readme = "README.md"
 license = "Apache-2.0"
 repository = "https://github.com/machanirobotics/grpc-mcp-gateway"
 keywords = ["grpc", "mcp", "protobuf", "mcp-server"]
 categories = ["encoding", "api-bindings"]
-include = ["src/", "Cargo.toml"]
+include = ["src/", "Cargo.toml", "README.md"]
 
 [dependencies]
 prost = "0.14"

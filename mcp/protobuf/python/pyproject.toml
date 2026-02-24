@@ -6,6 +6,7 @@ build-backend = "setuptools.build_meta"
 name = "grpc-mcp-gateway-protos"
 version = "0.1.0"
 description = "Pre-compiled Protocol Buffer types for grpc-mcp-gateway (mcp.protobuf)"
+readme = "README.md"
 requires-python = ">=3.10"
 license = "Apache-2.0"
 keywords = ["grpc", "mcp", "protobuf", "model-context-protocol"]
