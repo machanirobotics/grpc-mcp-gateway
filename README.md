@@ -1,6 +1,8 @@
 # grpc-mcp-gateway
 
 [![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev/)
+[![PyPI](https://img.shields.io/pypi/v/grpc-mcp-gateway-protos?logo=python&label=PyPI)](https://pypi.org/project/grpc-mcp-gateway-protos/)
+[![Crates.io](https://img.shields.io/crates/v/mcp-protobuf?logo=rust&label=crates.io)](https://crates.io/crates/mcp-protobuf)
 [![BSR](https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue)](https://buf.build/machanirobotics/grpc-mcp-gateway)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -17,7 +19,7 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 - **Elicitation** — Generate confirmation dialogs before tool execution via `(mcp.protobuf.elicitation)`
 - **Transports** — stdio, SSE, and streamable-http — run multiple concurrently in a single process
 - **gRPC Gateway** — Forward MCP tool calls to a remote gRPC server (Go)
-- **Published Protos** — Import annotations directly from [`buf.build/machanirobotics/grpc-mcp-gateway`](https://buf.build/machanirobotics/grpc-mcp-gateway)
+- **Published Protos** — Import annotations from [`buf.build/machanirobotics/grpc-mcp-gateway`](https://buf.build/machanirobotics/grpc-mcp-gateway), or install pre-compiled types from [PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/) / [crates.io](https://crates.io/crates/mcp-protobuf)
 
 | Language   | Generated File         | Example                              |
 | ---------- | ---------------------- | ------------------------------------ |
@@ -63,9 +65,9 @@ sequenceDiagram
 4. **Serve** — the generated code starts an MCP server on your chosen transport(s).
 5. **Connect** — MCP clients (Claude Desktop, MCP Inspector, custom LLM agents) discover and invoke your tools.
 
-## Quick Start
+## Install
 
-### 1. Install the plugin
+### Plugin
 
 ```bash
 go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp@latest
@@ -73,7 +75,19 @@ go install github.com/machanirobotics/grpc-mcp-gateway/plugin/cmd/protoc-gen-mcp
 
 Or download a binary from [GitHub Releases](https://github.com/machanirobotics/grpc-mcp-gateway/releases).
 
-### 2. Add the proto dependency
+### Pre-compiled proto types
+
+The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled libraries so generated code can resolve its imports at runtime — just like `googleapis-common-protos` for Google API types.
+
+| Language | Package | Install |
+| -------- | ------- | ------- |
+| **Go** | [`mcp/protobuf/mcppb`](mcp/protobuf/mcppb) | `go get github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb` |
+| **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos` |
+| **Rust** | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf) | `cargo add mcp-protobuf` |
+
+## Quick Start
+
+### 1. Add the proto dependency
 
 ```yaml
 # buf.yaml
@@ -87,7 +101,7 @@ deps:
 buf dep update
 ```
 
-### 3. Annotate your proto
+### 2. Annotate your proto
 
 ```protobuf
 syntax = "proto3";
@@ -127,7 +141,7 @@ service TodoService {
 }
 ```
 
-### 4. Generate code
+### 3. Generate code
 
 ```yaml
 # buf.gen.yaml
@@ -160,7 +174,7 @@ plugins:
 buf generate
 ```
 
-### 5. Run with MCP Inspector
+### 4. Run with MCP Inspector
 
 ```bash
 # Go
@@ -243,8 +257,11 @@ grpc-mcp-gateway/
 ├── go.mod                          # Single Go module
 ├── go.work                         # Workspace (root + examples)
 ├── proto/                          # Publishable buf module (BSR)
-│   └── mcp/protobuf/              # MCP annotation .proto files
-├── mcp/protobuf/                  # Generated .pb.go (public, importable)
+│   └── mcp/protobuf/              # MCP annotation .proto source files
+├── mcp/protobuf/                  # Pre-compiled proto libraries
+│   ├── mcppb/                     # Go (.pb.go) — importable as mcppb
+│   ├── python/                    # Python (PyPI: grpc-mcp-gateway-protos)
+│   └── rust/                      # Rust (crates.io: mcp-protobuf)
 ├── runtime/                       # Go runtime (server, config, schema helpers)
 ├── plugin/
 │   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)
