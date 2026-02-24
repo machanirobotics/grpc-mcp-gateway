@@ -200,7 +200,7 @@ npx @modelcontextprotocol/inspector -- ./target/debug/stdio
 
 # C++
 cd examples/cpp && make
-npx @modelcontextprotocol/inspector -- ./server
+MCP_TRANSPORT=stdio npx @modelcontextprotocol/inspector -- ./server
 ```
 
 ## MCP Annotations

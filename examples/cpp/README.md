@@ -102,9 +102,18 @@ make
 # Server binary is at cpp/server (built in cpp/)
 ./server
 
-# Run — stdio transport instead
+# Run — stdio transport (for MCP Inspector)
 MCP_TRANSPORT=stdio ./server
+
+# Run with MCP Inspector
+MCP_TRANSPORT=stdio npx @modelcontextprotocol/inspector -- ./server
 ```
+
+## Troubleshooting
+
+**"MCP HTTP server failed" / "Address already in use"** — Port 8082 is already in use (e.g. another server instance). Either:
+- Kill the process: `lsof -i :8082` then `kill <PID>`
+- Use a different port: `MCP_PORT=8083 ./server`
 
 ## Environment Variables
 

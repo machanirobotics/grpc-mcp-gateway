@@ -28,9 +28,11 @@ pub mod mcp_handler;
 fn start_{{ $svcName | snakeCase }}_mcp_http(host: &str, port: u16, base_path: &str) {
     let rt = tokio::runtime::Runtime::new().expect("failed to create tokio runtime");
     rt.block_on(async {
-        mcp_handler::serve_{{ $svcName | snakeCase }}_mcp(host, port, base_path)
-            .await
-            .expect("MCP HTTP server failed");
+        if let Err(e) = mcp_handler::serve_{{ $svcName | snakeCase }}_mcp(host, port, base_path).await {
+            eprintln!("MCP HTTP server failed: {e}");
+            eprintln!("Hint: Port {port} may be in use. Try MCP_PORT=8083 ./server or kill the process using the port.");
+            std::process::exit(1);
+        }
     });
 }
 
