@@ -10,8 +10,8 @@ Use the version matching the [grpc-mcp-gateway release](https://github.com/macha
 # Latest
 pip install grpc-mcp-gateway-protos
 
-# Or pin to a specific release (e.g. v2.0.0)
-pip install grpc-mcp-gateway-protos==2.0.0
+# Or pin to a specific release (e.g. v1.3.1)
+pip install grpc-mcp-gateway-protos==1.3.1
 ```
 
 ## What's included
