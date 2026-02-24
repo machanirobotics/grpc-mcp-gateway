@@ -144,7 +144,7 @@ graph TD
     end
 
     subgraph "proto/generated/cpp/"
-        MF_GEN["Makefile — build rules"]
+        MF_GEN["Makefile — delegates to cpp/"]
         MAIN_GEN["main.cc — entry point"]
         PROTO["todo/v1/*.pb.h/cc · *.grpc.pb.h/cc"]
         MCP_CPP["todo/v1/todo_service.mcp.h/cc"]
