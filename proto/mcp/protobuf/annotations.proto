@@ -11,6 +11,8 @@ import "google/protobuf/descriptor.proto";
 import "mcp/protobuf/service_options.proto";
 import "mcp/protobuf/prompt.proto";
 import "mcp/protobuf/elicitation.proto";
+import "mcp/protobuf/field.proto";
+import "mcp/protobuf/enum.proto";
 
 // Attach MCP service options (app, prompts, resources) to a gRPC service.
 extend google.protobuf.ServiceOptions {
@@ -30,4 +32,19 @@ extend google.protobuf.MethodOptions {
 // Attach an elicitation (confirmation dialog) to a single RPC method.
 extend google.protobuf.MethodOptions {
   optional MCPElicitation elicitation = 51003;
+}
+
+// Attach a description to a message field (for MCP tool schema).
+extend google.protobuf.FieldOptions {
+  optional MCPFieldOptions field = 51004;
+}
+
+// Attach a description to an enum type (for MCP tool schema).
+extend google.protobuf.EnumOptions {
+  optional MCPEnumOptions enum = 51005;
+}
+
+// Attach a description to an enum value (for MCP tool schema).
+extend google.protobuf.EnumValueOptions {
+  optional MCPEnumValueOptions enum_value = 51006;
 }

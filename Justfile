@@ -90,6 +90,7 @@ test-all: test test-python test-rust test-cpp
 # Generate pre-compiled proto libraries (Go + Python + Rust)
 generate-proto:
     cd proto && buf generate
+    go fmt ./mcp/protobuf/... ./plugin/...
     @echo '__path__ = __import__("pkgutil").extend_path(__path__, __name__)' > mcp/protobuf/python/mcp/__init__.py
     @touch mcp/protobuf/python/mcp/protobuf/__init__.py
 
@@ -115,6 +116,7 @@ build-cpp:
 # Rebuild the plugin and regenerate all example proto code
 generate: generate-proto install
     cd examples && buf generate
+    go fmt ./examples/proto/generated/go/... ./plugin/...
     just generate-cpp
 
 # Run all checks (fmt, vet, lint, test, build)

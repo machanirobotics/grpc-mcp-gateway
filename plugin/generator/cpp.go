@@ -14,36 +14,36 @@ import (
 
 // CppMethodInfo carries C++-specific identifiers for a single RPC method.
 type CppMethodInfo struct {
-	CppMethodName string          // snake_case, e.g. create_todo
-	GoName        string          // original RPC name for stub call, e.g. CreateTodo
-	ConstName     string          // SCREAMING_SNAKE constant prefix
-	ToolName      string          // MCP tool name
-	Description   string          // method description
-	InputType     string          // C++ request type, e.g. CreateTodoRequest
-	OutputType    string          // C++ response type, e.g. Todo
+	CppMethodName string // snake_case, e.g. create_todo
+	GoName        string // original RPC name for stub call, e.g. CreateTodo
+	ConstName     string // SCREAMING_SNAKE constant prefix
+	ToolName      string // MCP tool name
+	Description   string // method description
+	InputType     string // C++ request type, e.g. CreateTodoRequest
+	OutputType    string // C++ response type, e.g. Todo
 	MethodOpts    *MCPMethodOpts
 }
 
 // CppTplParams is the top-level data fed into the C++ code templates.
 type CppTplParams struct {
-	Version            string
-	SourcePath         string
-	ProtoPackage       string // e.g. "todo.v1"
-	CppNamespace       string // e.g. "todo::v1"
-	NamespaceOpen      string // e.g. "namespace todo { namespace v1 {"
-	NamespaceClose     string // e.g. "} } // namespace todo::v1"
-	IncludePath        string // e.g. "todo/v1/todo_service.mcp.h"
-	GrpcInclude        string // e.g. "todo/v1/todo_service.grpc.pb.h"
-	SchemaJSON         map[string]string
-	ToolMeta           map[string]ToolMeta
-	Services           map[string]map[string]CppMethodInfo
-	ServiceBasePaths   map[string]string
-	ServiceOpts        map[string]*MCPServiceOpts
-	CrateName          string // e.g. "todo_mcp_cpp"
-	McpCcPath          string // e.g. "todo/v1/todo_service.mcp.cc"
-	GenRoot            string // e.g. ".." (relative to rust/)
-	FirstServiceName   string // e.g. "TodoService"
-	FirstServiceSnake  string // e.g. "todo_service"
+	Version           string
+	SourcePath        string
+	ProtoPackage      string // e.g. "todo.v1"
+	CppNamespace      string // e.g. "todo::v1"
+	NamespaceOpen     string // e.g. "namespace todo { namespace v1 {"
+	NamespaceClose    string // e.g. "} } // namespace todo::v1"
+	IncludePath       string // e.g. "todo/v1/todo_service.mcp.h"
+	GrpcInclude       string // e.g. "todo/v1/todo_service.grpc.pb.h"
+	SchemaJSON        map[string]string
+	ToolMeta          map[string]ToolMeta
+	Services          map[string]map[string]CppMethodInfo
+	ServiceBasePaths  map[string]string
+	ServiceOpts       map[string]*MCPServiceOpts
+	CrateName         string // e.g. "todo_mcp_cpp"
+	McpCcPath         string // e.g. "todo/v1/todo_service.mcp.cc"
+	GenRoot           string // e.g. ".." (relative to rust/)
+	FirstServiceName  string // e.g. "TodoService"
+	FirstServiceSnake string // e.g. "todo_service"
 }
 
 // CppFileGenerator produces the C++ MCP adapter and Rust bridge/handler files.
@@ -157,17 +157,18 @@ func (g *CppFileGenerator) buildCppParams(dir, stem string) CppTplParams {
 				}
 			}
 
-			stdSchema := messageSchema(meth.Input.Desc, false)
+			desc := strings.TrimSpace(CleanComment(string(meth.Comments.Leading)))
+			if methOpts != nil && methOpts.ToolDescription != "" {
+				desc = methOpts.ToolDescription
+			}
+
+			// Standard schema (root description = tool description, per MCP inputSchema convention)
+			stdSchema := messageSchema(meth.Input.Desc, false, desc)
 			stdBytes, err := json.Marshal(stdSchema)
 			if err != nil {
 				panic(fmt.Sprintf("marshal standard schema: %v", err))
 			}
 			schemaJSON[key] = string(stdBytes)
-
-			desc := strings.TrimSpace(CleanComment(string(meth.Comments.Leading)))
-			if methOpts != nil && methOpts.ToolDescription != "" {
-				desc = methOpts.ToolDescription
-			}
 			toolMeta[key] = ToolMeta{
 				Name:        toolName,
 				Description: desc,
@@ -230,7 +231,7 @@ func (g *CppFileGenerator) buildCppParams(dir, stem string) CppTplParams {
 		NamespaceOpen:     strings.Join(nsOpen, " "),
 		NamespaceClose:    strings.Join(closers, " ") + " // namespace " + cppNs,
 		IncludePath:       filepath.Join(dir, stem+".mcp.h"),
-		GrpcInclude:      filepath.Join(dir, stem+".grpc.pb.h"),
+		GrpcInclude:       filepath.Join(dir, stem+".grpc.pb.h"),
 		SchemaJSON:        schemaJSON,
 		ToolMeta:          toolMeta,
 		Services:          services,
@@ -238,7 +239,7 @@ func (g *CppFileGenerator) buildCppParams(dir, stem string) CppTplParams {
 		ServiceOpts:       serviceOpts,
 		CrateName:         crateName,
 		McpCcPath:         mcpCcPath,
-		GenRoot:            genRoot,
+		GenRoot:           genRoot,
 		FirstServiceName:  firstSvcName,
 		FirstServiceSnake: firstSvcSnake,
 	}

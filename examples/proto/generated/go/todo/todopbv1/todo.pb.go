@@ -7,6 +7,7 @@
 package todopbv1
 
 import (
+	_ "github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb"
 	_ "google.golang.org/genproto/googleapis/api/annotations"
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
@@ -579,50 +580,69 @@ var File_todo_v1_todo_proto protoreflect.FileDescriptor
 
 const file_todo_v1_todo_proto_rawDesc = "" +
 	"\n" +
-	"\x12todo/v1/todo.proto\x12\atodo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x89\x01\n" +
-	"\x04User\x12\x17\n" +
-	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12&\n" +
+	"\x12todo/v1/todo.proto\x12\atodo.v1\x1a\x1cgoogle/api/annotations.proto\x1a\x17google/api/client.proto\x1a\x1fgoogle/api/field_behavior.proto\x1a\x1emcp/protobuf/annotations.proto\x1a\x19google/api/resource.proto\x1a google/protobuf/field_mask.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\xdf\x01\n" +
+	"\x04User\x12m\n" +
+	"\x04name\x18\x01 \x01(\tBY\xe0A\b\xe2\xf3\x18R\n" +
+	"PThe resource name of the user. You can parse the user id from the resource name.R\x04name\x12&\n" +
 	"\fdisplay_name\x18\x02 \x01(\tB\x03\xe0A\x01R\vdisplayName:@\xeaA=\n" +
-	" machanirobotics.app.todo.v1/User\x12\fusers/{user}*\x05users2\x04user\"\x8b\x03\n" +
-	"\x04Todo\x12\x17\n" +
-	"\x04name\x18\x01 \x01(\tB\x03\xe0A\bR\x04name\x12\x19\n" +
-	"\x05title\x18\x02 \x01(\tB\x03\xe0A\x01R\x05title\x12%\n" +
-	"\vdescription\x18\x03 \x01(\tB\x03\xe0A\x01R\vdescription\x12!\n" +
-	"\tcompleted\x18\x04 \x01(\bB\x03\xe0A\x01R\tcompleted\x122\n" +
+	" machanirobotics.app.todo.v1/User\x12\fusers/{user}*\x05users2\x04user\"\xc0\x04\n" +
+	"\x04Todo\x12c\n" +
+	"\x04name\x18\x01 \x01(\tBO\xe0A\b\xe2\xf3\x18H\n" +
+	"FResource name (e.g. users/alice/todos/abc123). Required when updating.R\x04name\x128\n" +
+	"\x05title\x18\x02 \x01(\tB\"\xe0A\x01\xe2\xf3\x18\x1b\n" +
+	"\x19Short title for the todo.R\x05title\x12P\n" +
+	"\vdescription\x18\x03 \x01(\tB.\xe0A\x01\xe2\xf3\x18'\n" +
+	"%Optional longer description or notes.R\vdescription\x12@\n" +
+	"\tcompleted\x18\x04 \x01(\bB\"\xe0A\x01\xe2\xf3\x18\x1b\n" +
+	"\x19Whether the todo is done.R\tcompleted\x122\n" +
 	"\bpriority\x18\x05 \x01(\x0e2\x11.todo.v1.PriorityB\x03\xe0A\x01R\bpriority\x12@\n" +
 	"\vcreate_time\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"createTime\x12@\n" +
 	"\vupdate_time\x18\a \x01(\v2\x1a.google.protobuf.TimestampB\x03\xe0A\x03R\n" +
 	"updateTime:M\xeaAJ\n" +
-	" machanirobotics.app.todo.v1/Todo\x12\x19users/{user}/todos/{todo}*\x05todos2\x04todo\"\x9b\x01\n" +
-	"\x11CreateTodoRequest\x12@\n" +
-	"\x06parent\x18\x01 \x01(\tB(\xe0A\x02\xfaA\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12&\n" +
-	"\x04todo\x18\x02 \x01(\v2\r.todo.v1.TodoB\x03\xe0A\x02R\x04todo\x12\x1c\n" +
-	"\atodo_id\x18\x03 \x01(\tB\x03\xe0A\x02R\x06todoId\"N\n" +
-	"\x0eGetTodoRequest\x12<\n" +
-	"\x04name\x18\x01 \x01(\tB(\xe0A\x02\xfaA\"\n" +
-	" machanirobotics.app.todo.v1/TodoR\x04name\"\x9a\x01\n" +
-	"\x10ListTodosRequest\x12@\n" +
-	"\x06parent\x18\x01 \x01(\tB(\xe0A\x02\xfaA\"\x12 machanirobotics.app.todo.v1/TodoR\x06parent\x12 \n" +
-	"\tpage_size\x18\x02 \x01(\x05B\x03\xe0A\x01R\bpageSize\x12\"\n" +
+	" machanirobotics.app.todo.v1/Todo\x12\x19users/{user}/todos/{todo}*\x05todos2\x04todo\"\xe3\x02\n" +
+	"\x11CreateTodoRequest\x12\x99\x01\n" +
+	"\x06parent\x18\x01 \x01(\tB\x80\x01\xe0A\x02\xfaA\"\x12 machanirobotics.app.todo.v1/Todo\xe2\xf3\x18T\n" +
+	"RParent resource name (e.g. users/alice). The todo will be created under this user.R\x06parent\x12&\n" +
+	"\x04todo\x18\x02 \x01(\v2\r.todo.v1.TodoB\x03\xe0A\x02R\x04todo\x12\x89\x01\n" +
+	"\atodo_id\x18\x03 \x01(\tBp\xe0A\x02\xe2\xf3\x18i\n" +
+	"UUnique ID for the todo (e.g. abc123). Becomes the final segment of the resource name.\x12\x06abc123\x12\btodo-001R\x06todoId\"\xaf\x01\n" +
+	"\x0eGetTodoRequest\x12\x9c\x01\n" +
+	"\x04name\x18\x01 \x01(\tB\x87\x01\xe0A\x02\xfaA\"\n" +
+	" machanirobotics.app.todo.v1/Todo\xe2\xf3\x18[\n" +
+	":Resource name of the todo (e.g. users/alice/todos/abc123).\x12\x18users/alice/todos/abc123\"\x03uriR\x04name\"\xc6\x02\n" +
+	"\x10ListTodosRequest\x12\x89\x01\n" +
+	"\x06parent\x18\x01 \x01(\tBq\xe0A\x02\xfaA\"\x12 machanirobotics.app.todo.v1/Todo\xe2\xf3\x18E\n" +
+	"CParent resource name (e.g. users/alice). Lists todos for this user.R\x06parent\x12Q\n" +
+	"\tpage_size\x18\x02 \x01(\x05B4\xe0A\x01\xe2\xf3\x18-\n" +
+	"+Max number of todos to return (default 50).R\bpageSize\x12S\n" +
 	"\n" +
-	"page_token\x18\x03 \x01(\tB\x03\xe0A\x01R\tpageToken\"`\n" +
+	"page_token\x18\x03 \x01(\tB4\xe0A\x01\xe2\xf3\x18-\n" +
+	"+Token from previous response for next page.R\tpageToken\"`\n" +
 	"\x11ListTodosResponse\x12#\n" +
 	"\x05todos\x18\x01 \x03(\v2\r.todo.v1.TodoR\x05todos\x12&\n" +
-	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"}\n" +
+	"\x0fnext_page_token\x18\x02 \x01(\tR\rnextPageToken\"\xe5\x01\n" +
 	"\x11UpdateTodoRequest\x12&\n" +
-	"\x04todo\x18\x01 \x01(\v2\r.todo.v1.TodoB\x03\xe0A\x02R\x04todo\x12@\n" +
-	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskB\x03\xe0A\x01R\n" +
-	"updateMask\"Q\n" +
-	"\x11DeleteTodoRequest\x12<\n" +
-	"\x04name\x18\x01 \x01(\tB(\xe0A\x02\xfaA\"\n" +
-	" machanirobotics.app.todo.v1/TodoR\x04name*s\n" +
-	"\bPriority\x12\x18\n" +
-	"\x14PRIORITY_UNSPECIFIED\x10\x00\x12\x10\n" +
-	"\fPRIORITY_LOW\x10\x01\x12\x13\n" +
-	"\x0fPRIORITY_MEDIUM\x10\x02\x12\x11\n" +
-	"\rPRIORITY_HIGH\x10\x03\x12\x13\n" +
-	"\x0fPRIORITY_URGENT\x10\x04Bz\n" +
+	"\x04todo\x18\x01 \x01(\v2\r.todo.v1.TodoB\x03\xe0A\x02R\x04todo\x12\xa7\x01\n" +
+	"\vupdate_mask\x18\x02 \x01(\v2\x1a.google.protobuf.FieldMaskBj\xe0A\x01\xe2\xf3\x18c\n" +
+	"aComma-separated field names to update (e.g. title,completed). Omit to update all provided fields.R\n" +
+	"updateMask\"\x9c\x01\n" +
+	"\x11DeleteTodoRequest\x12\x86\x01\n" +
+	"\x04name\x18\x01 \x01(\tBr\xe0A\x02\xfaA\"\n" +
+	" machanirobotics.app.todo.v1/Todo\xe2\xf3\x18F\n" +
+	"DResource name of the todo to delete (e.g. users/alice/todos/abc123).R\x04name*\xea\x02\n" +
+	"\bPriority\x12B\n" +
+	"\x14PRIORITY_UNSPECIFIED\x10\x00\x1a(\xf2\xf3\x18$\n" +
+	"\"Unspecified; use default priority.\x12B\n" +
+	"\fPRIORITY_LOW\x10\x01\x1a0\xf2\xf3\x18,\n" +
+	"*Low priority; can be done when convenient.\x12C\n" +
+	"\x0fPRIORITY_MEDIUM\x10\x02\x1a.\xf2\xf3\x18*\n" +
+	"(Normal priority; default for most todos.\x12<\n" +
+	"\rPRIORITY_HIGH\x10\x03\x1a)\xf2\xf3\x18%\n" +
+	"#High priority; should be done soon.\x12,\n" +
+	"\x0fPRIORITY_URGENT\x10\x04\x1a\x17\xf2\xf3\x18\x13\n" +
+	"\x11Urgent; do first.\x1a%\xea\xf3\x18!\n" +
+	"\x1fPriority level for a todo item.Bz\n" +
 	"\vcom.todo.v1B\tTodoProtoP\x01Z^github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/todo/todopbv1;todopbv1b\x06proto3"
 
 var (

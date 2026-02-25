@@ -28,6 +28,8 @@ This crate provides the Rust bindings (via [prost](https://crates.io/crates/pros
 - **`MCPElicitation`** — Confirmation dialogs
 - **`MCPResource`** — Resource definitions
 - **`MCPApp`** — App info
+- **`MCPFieldOptions`** — Field description, examples, format, deprecated
+- **`MCPEnumOptions`**, **`MCPEnumValueOptions`** — Enum and enum-value descriptions
 - **`MCPMimeType`**, **`MCPFieldType`** — Enums
 
 ## Usage

@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go/buf/validate"
+	"github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb"
 	"google.golang.org/genproto/googleapis/api/annotations"
 	"google.golang.org/protobuf/proto"
 	"google.golang.org/protobuf/reflect/protoreflect"
@@ -91,7 +92,8 @@ func extractValidateConstraints(fd protoreflect.FieldDescriptor) map[string]any 
 }
 
 // messageSchema converts a protobuf message descriptor into a JSON Schema map.
-func messageSchema(md protoreflect.MessageDescriptor, openAI bool) map[string]any {
+// If schemaDesc is non-empty, it is set as the root-level description (per MCP inputSchema convention).
+func messageSchema(md protoreflect.MessageDescriptor, openAI bool, schemaDesc string) map[string]any {
 	required, props := []string{}, map[string]any{}
 	oneOfGroups := map[string][]map[string]any{}
 	for i := 0; i < md.Fields().Len(); i++ {
@@ -120,6 +122,9 @@ func messageSchema(md protoreflect.MessageDescriptor, openAI bool) map[string]an
 		}
 	}
 	result := map[string]any{"type": "object", "properties": props, "required": required}
+	if schemaDesc != "" {
+		result["description"] = schemaDesc
+	}
 	if len(oneOfGroups) > 0 {
 		var anyOf []map[string]any
 		for _, entries := range oneOfGroups {
@@ -134,6 +139,55 @@ func messageSchema(md protoreflect.MessageDescriptor, openAI bool) map[string]an
 		}
 	}
 	return result
+}
+
+// getFieldDescription returns the field description from (mcp.protobuf.field) if set,
+// otherwise the fallback (e.g. from the leading comment).
+func getFieldDescription(fd protoreflect.FieldDescriptor, fallback string) string {
+	if proto.HasExtension(fd.Options(), mcppb.E_Field) {
+		opts := proto.GetExtension(fd.Options(), mcppb.E_Field).(*mcppb.MCPFieldOptions)
+		if opts != nil && opts.Description != "" {
+			return opts.Description
+		}
+	}
+	return fallback
+}
+
+// applyMCPFieldOptions applies (mcp.protobuf.field) options to the schema.
+// Format from MCPFieldOptions overrides any from buf.validate.
+// For enum fields with (mcp.protobuf.enum) or (mcp.protobuf.enum_value), enum descriptions take precedence over field description.
+func applyMCPFieldOptions(fd protoreflect.FieldDescriptor, schema map[string]any, descFallback string) {
+	if !proto.HasExtension(fd.Options(), mcppb.E_Field) {
+		if descFallback != "" {
+			schema["description"] = descFallback
+		}
+		return
+	}
+	opts := proto.GetExtension(fd.Options(), mcppb.E_Field).(*mcppb.MCPFieldOptions)
+	if opts == nil {
+		return
+	}
+	// For enum fields, prefer enum-level and enum-value descriptions over field description
+	if fd.Kind() == protoreflect.EnumKind && schema["description"] != nil && schema["description"] != "" {
+		// Enum descriptions already set by enumSchema; skip field description
+	} else if opts.Description != "" {
+		schema["description"] = opts.Description
+	} else if descFallback != "" {
+		schema["description"] = descFallback
+	}
+	if len(opts.Examples) > 0 {
+		examples := make([]any, len(opts.Examples))
+		for i, e := range opts.Examples {
+			examples[i] = e
+		}
+		schema["examples"] = examples
+	}
+	if opts.Deprecated {
+		schema["deprecated"] = true
+	}
+	if opts.Format != "" {
+		schema["format"] = opts.Format
+	}
 }
 
 // fieldSchema converts a single protobuf field descriptor to a JSON Schema map.
@@ -153,19 +207,65 @@ func fieldSchema(fd protoreflect.FieldDescriptor, openAI bool) map[string]any {
 	for k, v := range extractValidateConstraints(fd) {
 		schema[k] = v
 	}
+	applyMCPFieldOptions(fd, schema, "")
 	if fd.IsList() {
 		return map[string]any{"type": "array", "items": schema}
 	}
 	return schema
 }
 
+// enumDescriptions holds enum-level and per-value descriptions for schema output.
+type enumDescriptions struct {
+	enumDesc string
+	values   map[string]string // value name -> description
+}
+
+func getEnumDescriptions(ed protoreflect.EnumDescriptor) enumDescriptions {
+	out := enumDescriptions{values: make(map[string]string)}
+	if proto.HasExtension(ed.Options(), mcppb.E_Enum) {
+		opts := proto.GetExtension(ed.Options(), mcppb.E_Enum).(*mcppb.MCPEnumOptions)
+		if opts != nil && opts.Description != "" {
+			out.enumDesc = opts.Description
+		}
+	}
+	vals := ed.Values()
+	for i := 0; i < vals.Len(); i++ {
+		vd := vals.Get(i)
+		if proto.HasExtension(vd.Options(), mcppb.E_EnumValue) {
+			opts := proto.GetExtension(vd.Options(), mcppb.E_EnumValue).(*mcppb.MCPEnumValueOptions)
+			if opts != nil && opts.Description != "" {
+				out.values[string(vd.Name())] = opts.Description
+			}
+		}
+	}
+	return out
+}
+
 // enumSchema returns a JSON Schema for a protobuf enum field.
 func enumSchema(fd protoreflect.FieldDescriptor) map[string]any {
-	vals := make([]string, fd.Enum().Values().Len())
+	ed := fd.Enum()
+	vals := make([]string, ed.Values().Len())
 	for i := range vals {
-		vals[i] = string(fd.Enum().Values().Get(i).Name())
+		vals[i] = string(ed.Values().Get(i).Name())
 	}
-	return map[string]any{"type": "string", "enum": vals}
+	schema := map[string]any{"type": "string", "enum": vals}
+	descs := getEnumDescriptions(ed)
+	if descs.enumDesc != "" || len(descs.values) > 0 {
+		var parts []string
+		if descs.enumDesc != "" {
+			parts = append(parts, strings.TrimSuffix(descs.enumDesc, "."))
+		}
+		for _, v := range vals {
+			if d, ok := descs.values[v]; ok {
+				parts = append(parts, fmt.Sprintf("%s: %s", v, d))
+			}
+		}
+		schema["description"] = strings.Join(parts, ". ")
+		if len(descs.values) > 0 {
+			schema["enumDescriptions"] = descs.values
+		}
+	}
+	return schema
 }
 
 // scalarSchema returns a JSON Schema for a protobuf scalar field.

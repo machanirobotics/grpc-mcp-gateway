@@ -91,6 +91,6 @@ func messageFieldSchema(fd protoreflect.FieldDescriptor, openAI bool) map[string
 		}
 		return s
 	default:
-		return messageSchema(fd.Message(), openAI)
+		return messageSchema(fd.Message(), openAI, "")
 	}
 }

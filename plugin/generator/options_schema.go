@@ -30,9 +30,10 @@ func ResolveSchemaFields(gen *protogen.Plugin, schemaFQN string) []SchemaField {
 
 	var fields []SchemaField
 	for _, field := range msg.Fields {
+		desc := getFieldDescription(field.Desc, CleanComment(string(field.Comments.Leading)))
 		sf := SchemaField{
 			Name:        string(field.Desc.Name()),
-			Description: CleanComment(string(field.Comments.Leading)),
+			Description: desc,
 			Required:    isFieldRequired(field.Desc),
 			Type:        protoKindToJSONType(field.Desc.Kind()),
 		}
