@@ -160,6 +160,17 @@ service TodoService {
     };
   }
 }
+
+// Enum with descriptions for MCP tool schema
+enum Priority {
+  option (mcp.protobuf.enum) = { description: "Priority level for a todo item." };
+
+  PRIORITY_UNSPECIFIED = 0 [(mcp.protobuf.enum_value) = { description: "Unspecified; use default priority." }];
+  PRIORITY_LOW = 1 [(mcp.protobuf.enum_value) = { description: "Low priority; can be done when convenient." }];
+  PRIORITY_MEDIUM = 2 [(mcp.protobuf.enum_value) = { description: "Normal priority; default for most todos." }];
+  PRIORITY_HIGH = 3 [(mcp.protobuf.enum_value) = { description: "High priority; should be done soon." }];
+  PRIORITY_URGENT = 4 [(mcp.protobuf.enum_value) = { description: "Urgent; do first." }];
+}
 ```
 
 ### 3. Generate code
