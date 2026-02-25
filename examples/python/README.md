@@ -99,6 +99,7 @@ The generated code (`todo_service_pb2_mcp.py`) provides:
 
 | Package | Purpose |
 | --------------------- | ----------------------------------- |
+| `grpc-mcp-gateway-protos` | MCP annotation types (`mcp.protobuf`) — uses local path in this repo |
 | `mcp` | MCP Python SDK (FastMCP + low-level) |
 | `protobuf` | Protocol Buffers runtime |
 | `grpcio` | gRPC runtime |

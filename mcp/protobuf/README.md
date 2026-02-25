@@ -75,6 +75,8 @@ opts := proto.GetExtension(desc.Options(), mcppb.E_Service).(*mcppb.MCPServiceOp
 | `MCPElicitation` | Confirmation dialog (message, schema) |
 | `MCPResource` | Resource definition (uri, pattern, mime type) |
 | `MCPApp` | App info for MCP Apps |
+| `MCPFieldOptions` | Field description, examples, format, deprecated |
+| `MCPEnumOptions`, `MCPEnumValueOptions` | Enum and enum-value descriptions |
 | `MCPMimeType`, `MCPFieldType` | Enums |
 
 ## Publishing

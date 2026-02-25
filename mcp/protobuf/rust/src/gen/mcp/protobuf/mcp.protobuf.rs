@@ -80,6 +80,43 @@ pub struct McpElicitation {
     #[prost(string, tag="2")]
     pub schema: ::prost::alloc::string::String,
 }
+/// MCPFieldOptions attaches JSON Schema metadata to a message field.
+/// Used as: option (mcp.protobuf.field) = { description: "...", examples: \[...\], ... };
+/// These appear in the MCP tool inputSchema for that field.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpFieldOptions {
+    /// Human-readable description of the field (e.g. for JSON Schema).
+    #[prost(string, tag="1")]
+    pub description: ::prost::alloc::string::String,
+    /// Example values to guide LLMs (JSON Schema "examples").
+    #[prost(string, repeated, tag="2")]
+    pub examples: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// If true, marks the field as deprecated in the schema.
+    #[prost(bool, tag="3")]
+    pub deprecated: bool,
+    /// JSON Schema format override (e.g. "uri", "email", "uuid").
+    /// When set, overrides auto-detected format (e.g. from buf.validate).
+    #[prost(string, tag="4")]
+    pub format: ::prost::alloc::string::String,
+}
+/// MCPEnumOptions attaches a description to an enum type.
+/// Used as: option (mcp.protobuf.enum) = { description: "..." };
+/// The description appears in the MCP tool inputSchema for enum fields.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpEnumOptions {
+    /// Human-readable description of the enum (e.g. for JSON Schema).
+    #[prost(string, tag="1")]
+    pub description: ::prost::alloc::string::String,
+}
+/// MCPEnumValueOptions attaches a description to an enum value.
+/// Used as: ENUM_VALUE = 0 \[(mcp.protobuf.enum_value) = { description: "..." }\];
+/// Value descriptions are combined into the schema description for the enum field.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpEnumValueOptions {
+    /// Human-readable description of this enum value.
+    #[prost(string, tag="1")]
+    pub description: ::prost::alloc::string::String,
+}
 /// MCPFieldType enumerates JSON Schema primitive types used by elicitation fields.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, ::prost::Enumeration)]
 #[repr(i32)]

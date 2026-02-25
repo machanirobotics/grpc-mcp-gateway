@@ -24,8 +24,8 @@ type RsMethodInfo struct {
 type RsTplParams struct {
 	Version          string
 	SourcePath       string
-	SchemaJSON       map[string]string                 // key: ServiceName_MethodName -> schema JSON
-	ToolMeta         map[string]ToolMeta               // key: ServiceName_MethodName
+	SchemaJSON       map[string]string                  // key: ServiceName_MethodName -> schema JSON
+	ToolMeta         map[string]ToolMeta                // key: ServiceName_MethodName
 	Services         map[string]map[string]RsMethodInfo // key: ServiceName -> MethodName -> info
 	ServiceBasePaths map[string]string                  // key: ServiceName -> default base path
 	ServiceOpts      map[string]*MCPServiceOpts         // key: ServiceName
@@ -118,18 +118,18 @@ func (g *RustFileGenerator) buildRsParams() RsTplParams {
 				}
 			}
 
-			// Standard schema
-			stdSchema := messageSchema(meth.Input.Desc, false)
+			desc := strings.TrimSpace(CleanComment(string(meth.Comments.Leading)))
+			if methOpts != nil && methOpts.ToolDescription != "" {
+				desc = methOpts.ToolDescription
+			}
+
+			// Standard schema (root description = tool description, per MCP inputSchema convention)
+			stdSchema := messageSchema(meth.Input.Desc, false, desc)
 			stdBytes, err := json.Marshal(stdSchema)
 			if err != nil {
 				panic(fmt.Sprintf("marshal standard schema: %v", err))
 			}
 			schemaJSON[key] = string(stdBytes)
-
-			desc := strings.TrimSpace(CleanComment(string(meth.Comments.Leading)))
-			if methOpts != nil && methOpts.ToolDescription != "" {
-				desc = methOpts.ToolDescription
-			}
 			toolMeta[key] = ToolMeta{
 				Name:        toolName,
 				Description: desc,
@@ -168,4 +168,3 @@ func (g *RustFileGenerator) buildRsParams() RsTplParams {
 		ServiceOpts:      serviceOpts,
 	}
 }
-

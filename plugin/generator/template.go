@@ -11,7 +11,7 @@ const (
 	LangGo     = "go"
 	LangPython = "python"
 	LangRust   = "rust"
-	LangCpp = "cpp"
+	LangCpp    = "cpp"
 )
 
 // codeTemplates maps language name → embedded template content.

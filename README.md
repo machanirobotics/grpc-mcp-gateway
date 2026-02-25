@@ -16,6 +16,8 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 - **Multi-language** — Generate MCP server code for Go, Python, Rust, and C++ from a single `.proto` file
 - **Tools** — Every unary RPC becomes an MCP tool with a JSON Schema derived from the protobuf request message
 - **Prompts** — Attach prompt templates to RPCs with schema-validated arguments via `(mcp.protobuf.prompt)`
+- **Field descriptions** — Add `(mcp.protobuf.field) = { description: "..." }` to message fields for schema descriptions
+- **Enum descriptions** — Add `(mcp.protobuf.enum)` and `(mcp.protobuf.enum_value)` for enum-level and per-value descriptions in the schema
 - **Resources** — Auto-detect MCP resources from `google.api.resource` annotations
 - **Elicitation** — Generate confirmation dialogs before tool execution via `(mcp.protobuf.elicitation)`
 - **Transports** — stdio, SSE, and streamable-http — run multiple concurrently in a single process
@@ -274,6 +276,52 @@ rpc DeleteItem(DeleteItemRequest) returns (google.protobuf.Empty) {
 
 Elicitation is supported in all three languages with graceful degradation — if the client doesn't support elicitation, the tool proceeds without confirmation.
 
+### Field: `mcp.protobuf.field`
+
+Add JSON Schema metadata to a message field for the MCP tool inputSchema:
+
+```protobuf
+message User {
+  string name = 1 [
+    (google.api.field_behavior) = IDENTIFIER,
+    (mcp.protobuf.field) = {
+      description: "The resource name of the user. You can parse the user id from the resource name."
+      examples: "users/alice"
+      examples: "users/bob"
+      format: "uri"           // optional: override format (uri, email, uuid, etc.)
+      deprecated: false       // optional: mark field as deprecated
+    }
+  ];
+}
+```
+
+- **description** — Human-readable description (recommended for LLMs)
+- **examples** — Example values to guide LLMs (repeated)
+- **deprecated** — Mark the field as deprecated in the schema
+- **format** — JSON Schema format override (e.g. `uri`, `email`, `uuid`)
+
+### Enum: `mcp.protobuf.enum` and `mcp.protobuf.enum_value`
+
+Add descriptions to enum types and individual enum values for the MCP tool inputSchema:
+
+```protobuf
+enum Priority {
+  option (mcp.protobuf.enum) = { description: "Priority level for a todo item." };
+
+  PRIORITY_UNSPECIFIED = 0 [(mcp.protobuf.enum_value) = { description: "Unspecified; use default priority." }];
+  PRIORITY_LOW = 1 [(mcp.protobuf.enum_value) = { description: "Low priority; can be done when convenient." }];
+  PRIORITY_MEDIUM = 2 [(mcp.protobuf.enum_value) = { description: "Normal priority; default for most todos." }];
+  PRIORITY_HIGH = 3 [(mcp.protobuf.enum_value) = { description: "High priority; should be done soon." }];
+  PRIORITY_URGENT = 4 [(mcp.protobuf.enum_value) = { description: "Urgent; do first." }];
+}
+```
+
+The schema includes:
+- **description** — Combined enum-level and per-value descriptions
+- **enumDescriptions** — Map of value name → description for structured access
+
+For enum fields, enum descriptions take precedence over `(mcp.protobuf.field)` description when both are present.
+
 ### Resources
 
 Resources are auto-detected from `google.api.resource` annotations on proto messages. No additional MCP annotation is needed.
@@ -336,7 +384,7 @@ The tool's `inputSchema` is derived from the protobuf request message:
 - `buf.validate` constraints → `minLength`, `maxLength`, `pattern`, `minimum`, `maximum`, etc.
 - Well-known types (Timestamp, Duration, FieldMask, Struct, Any, wrappers) → appropriate JSON Schema
 - Protobuf `oneof` → JSON Schema `oneOf`/`anyOf`
-- Enums → JSON Schema `enum` with string values
+- Enums → JSON Schema `enum` with string values; `(mcp.protobuf.enum)` / `(mcp.protobuf.enum_value)` → `description` and `enumDescriptions`
 
 ## Transport Configuration
 

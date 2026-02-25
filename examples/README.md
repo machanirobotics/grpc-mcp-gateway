@@ -42,6 +42,8 @@ The proto uses:
 - **`mcp.protobuf.tool`** — per-RPC tool name/description overrides
 - **`mcp.protobuf.prompt`** — per-RPC prompt templates with schema-based arguments
 - **`mcp.protobuf.elicitation`** — confirmation dialogs with schema-based forms
+- **`mcp.protobuf.field`** — field descriptions, examples, format for tool inputSchema
+- **`mcp.protobuf.enum`** / **`mcp.protobuf.enum_value`** — enum-level and per-value descriptions
 - **`google.api.resource`** — auto-detected MCP resources from AIP resource annotations
 
 ## Code Generation

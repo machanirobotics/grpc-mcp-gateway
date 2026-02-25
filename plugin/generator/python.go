@@ -23,12 +23,12 @@ type PyMethodInfo struct {
 type PyTplParams struct {
 	Version          string
 	SourcePath       string
-	PBImports        string                           // import lines for *_pb2 modules
-	SchemaJSON       map[string]string                // key: ServiceName_MethodName -> schema JSON
-	ToolMeta         map[string]ToolMeta              // key: ServiceName_MethodName
+	PBImports        string              // import lines for *_pb2 modules
+	SchemaJSON       map[string]string   // key: ServiceName_MethodName -> schema JSON
+	ToolMeta         map[string]ToolMeta // key: ServiceName_MethodName
 	Services         map[string]map[string]PyMethodInfo
-	ServiceBasePaths map[string]string                // key: ServiceName -> default base path
-	ServiceOpts      map[string]*MCPServiceOpts       // key: ServiceName
+	ServiceBasePaths map[string]string          // key: ServiceName -> default base path
+	ServiceOpts      map[string]*MCPServiceOpts // key: ServiceName
 }
 
 // PythonFileGenerator produces a single *_pb2_mcp.py file from a protobuf file.
@@ -115,18 +115,18 @@ func (g *PythonFileGenerator) buildPyParams() PyTplParams {
 				}
 			}
 
-			// Standard schema
-			stdSchema := messageSchema(meth.Input.Desc, false)
+			toolDesc := CleanComment(string(meth.Comments.Leading))
+			if methOpts != nil && methOpts.ToolDescription != "" {
+				toolDesc = methOpts.ToolDescription
+			}
+
+			// Standard schema (root description = tool description, per MCP inputSchema convention)
+			stdSchema := messageSchema(meth.Input.Desc, false, toolDesc)
 			stdBytes, err := json.Marshal(stdSchema)
 			if err != nil {
 				panic(fmt.Sprintf("marshal standard schema: %v", err))
 			}
 			schemaJSON[key] = string(stdBytes)
-
-			toolDesc := CleanComment(string(meth.Comments.Leading))
-			if methOpts != nil && methOpts.ToolDescription != "" {
-				toolDesc = methOpts.ToolDescription
-			}
 
 			toolMeta[key] = ToolMeta{
 				Name:        toolName,
@@ -185,4 +185,3 @@ func (g *PythonFileGenerator) buildPyParams() PyTplParams {
 		ServiceOpts:      serviceOpts,
 	}
 }
-

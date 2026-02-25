@@ -84,16 +84,42 @@ rpc DeleteItem(DeleteItemRequest) returns (google.protobuf.Empty) {
 }
 ```
 
+### Field options
+
+Add JSON Schema metadata to message fields for the MCP tool inputSchema:
+
+```protobuf
+string name = 1 [(mcp.protobuf.field) = {
+  description: "Resource name of the item."
+  examples: "items/123"
+  format: "uri"
+}];
+```
+
+### Enum options
+
+Add descriptions to enum types and individual enum values:
+
+```protobuf
+enum Priority {
+  option (mcp.protobuf.enum) = { description: "Priority level." };
+  LOW = 0 [(mcp.protobuf.enum_value) = { description: "Low priority." }];
+  HIGH = 1 [(mcp.protobuf.enum_value) = { description: "High priority." }];
+}
+```
+
 ## Available Protos
 
 | File                                 | Description                                       |
 | ------------------------------------ | ------------------------------------------------- |
-| `mcp/protobuf/annotations.proto`     | Service, tool, prompt, and elicitation extensions |
+| `mcp/protobuf/annotations.proto`     | Service, tool, prompt, elicitation, field, enum extensions |
 | `mcp/protobuf/app.proto`             | `MCPApp` message (name, version, description)     |
 | `mcp/protobuf/prompt.proto`          | `MCPPrompt` and `MCPToolOptions` messages         |
 | `mcp/protobuf/elicitation.proto`     | `MCPElicitation` message                          |
 | `mcp/protobuf/service_options.proto` | `MCPServiceOptions` message                       |
 | `mcp/protobuf/resource.proto`        | `MCPResource` message                             |
+| `mcp/protobuf/field.proto`           | `MCPFieldOptions` (description, examples, format) |
+| `mcp/protobuf/enum.proto`            | `MCPEnumOptions`, `MCPEnumValueOptions`           |
 | `mcp/protobuf/field_type.proto`      | `MCPFieldType` enum                               |
 | `mcp/protobuf/mime_type.proto`       | `MCPMimeType` enum                                |
 

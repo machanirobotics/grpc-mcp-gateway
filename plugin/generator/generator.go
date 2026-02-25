@@ -36,11 +36,11 @@ type TplParams struct {
 	Version          string
 	SourcePath       string
 	GoPackage        string
-	ExtraImports     []string // e.g. `emptypb "google.golang.org/.../emptypb"`
+	ExtraImports     []string          // e.g. `emptypb "google.golang.org/.../emptypb"`
 	SchemaJSON       map[string]string // key: ServiceName_MethodName -> schema JSON
 	ToolMeta         map[string]ToolMeta
 	Services         map[string]map[string]MethodInfo
-	ServiceBasePaths map[string]string // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
+	ServiceBasePaths map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
 	ServiceOpts      map[string]*MCPServiceOpts // key: ServiceName
 }
 
@@ -174,8 +174,8 @@ func (g *FileGenerator) buildParams() TplParams {
 				}
 			}
 
-			// Standard schema
-			stdSchema := messageSchema(meth.Input.Desc, false)
+			// Standard schema (root description = tool description, per MCP inputSchema convention)
+			stdSchema := messageSchema(meth.Input.Desc, false, toolDesc)
 			stdBytes, err := json.Marshal(stdSchema)
 			if err != nil {
 				panic(fmt.Sprintf("marshal standard schema: %v", err))

@@ -18,12 +18,14 @@ pip install grpc-mcp-gateway-protos==1.3.3
 
 This package provides the Python bindings for:
 
-- **`mcp.protobuf.annotations`** — Service, tool, prompt, and elicitation options for annotating `.proto` files
+- **`mcp.protobuf.annotations`** — Service, tool, prompt, elicitation, and field options for annotating `.proto` files
 - **`mcp.protobuf.service_options`** — App metadata (`MCPServiceOptions`)
 - **`mcp.protobuf.prompt`** — Prompt templates (`MCPPrompt`, `MCPToolOptions`)
 - **`mcp.protobuf.elicitation`** — Confirmation dialogs (`MCPElicitation`)
 - **`mcp.protobuf.resource`** — Resource definitions (`MCPResource`, `MCPMimeType`)
 - **`mcp.protobuf.app`** — App info (`MCPApp`)
+- **`mcp.protobuf.field`** — Field description option (`MCPFieldOptions`)
+- **`mcp.protobuf.enum`** — Enum and enum-value descriptions (`MCPEnumOptions`, `MCPEnumValueOptions`)
 - **`mcp.protobuf.field_type`** — Field type enums
 
 ## Usage
