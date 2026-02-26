@@ -8,7 +8,9 @@ package {{ .GoPackage }}
 
 import (
 	"context"
+{{- if .HasStreamProgress }}
 	"errors"
+{{- end }}
 
 {{- range .ExtraImports }}
 	{{ . }}

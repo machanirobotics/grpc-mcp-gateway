@@ -34,15 +34,16 @@ type MethodInfo struct {
 
 // TplParams is the top-level data fed into the code template.
 type TplParams struct {
-	Version          string
-	SourcePath       string
-	GoPackage        string
-	ExtraImports     []string          // e.g. `emptypb "google.golang.org/.../emptypb"`
-	SchemaJSON       map[string]string // key: ServiceName_MethodName -> schema JSON
-	ToolMeta         map[string]ToolMeta
-	Services         map[string]map[string]MethodInfo
-	ServiceBasePaths map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
-	ServiceOpts      map[string]*MCPServiceOpts // key: ServiceName
+	Version           string
+	SourcePath        string
+	GoPackage         string
+	ExtraImports      []string          // e.g. `emptypb "google.golang.org/.../emptypb"`
+	SchemaJSON        map[string]string // key: ServiceName_MethodName -> schema JSON
+	ToolMeta          map[string]ToolMeta
+	Services          map[string]map[string]MethodInfo
+	ServiceBasePaths  map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
+	ServiceOpts       map[string]*MCPServiceOpts  // key: ServiceName
+	HasStreamProgress bool                        // true if any method uses server streaming with progress
 }
 
 // FileGenerator produces a single *.pb.mcp.go file from a protobuf file.
@@ -226,15 +227,29 @@ func (g *FileGenerator) buildParams() TplParams {
 	}
 	sort.Strings(extraImports)
 
+	hasStreamProgress := false
+	for _, methods := range services {
+		for _, info := range methods {
+			if info.StreamProgress != nil {
+				hasStreamProgress = true
+				break
+			}
+		}
+		if hasStreamProgress {
+			break
+		}
+	}
+
 	return TplParams{
-		Version:          PluginVersion,
-		SourcePath:       g.f.Desc.Path(),
-		GoPackage:        string(g.f.GoPackageName),
-		ExtraImports:     extraImports,
-		SchemaJSON:       schemaJSON,
-		ToolMeta:         toolMeta,
-		Services:         services,
-		ServiceBasePaths: serviceBasePaths,
-		ServiceOpts:      serviceOpts,
+		Version:           PluginVersion,
+		SourcePath:        g.f.Desc.Path(),
+		GoPackage:         string(g.f.GoPackageName),
+		ExtraImports:      extraImports,
+		SchemaJSON:        schemaJSON,
+		ToolMeta:          toolMeta,
+		Services:          services,
+		ServiceBasePaths:  serviceBasePaths,
+		ServiceOpts:       serviceOpts,
+		HasStreamProgress: hasStreamProgress,
 	}
 }
