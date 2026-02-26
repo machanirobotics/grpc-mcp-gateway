@@ -13,11 +13,15 @@ import (
 
 // RsMethodInfo carries Rust-specific identifiers for a single RPC method.
 type RsMethodInfo struct {
-	RsMethodName string // snake_case method name, e.g. create_todo
-	ConstName    string // SCREAMING_SNAKE constant prefix, e.g. TODO_SERVICE_CREATE_TODO
-	ToolName     string // MCP tool name, e.g. todo_v1_TodoService_CreateTodo
-	Description  string // method description
-	MethodOpts   *MCPMethodOpts
+	RsMethodName    string // snake_case method name, e.g. create_todo
+	ConstName       string // SCREAMING_SNAKE constant prefix, e.g. TODO_SERVICE_CREATE_TODO
+	ToolName        string // MCP tool name, e.g. todo_v1_TodoService_CreateTodo
+	Description     string // method description
+	MethodOpts      *MCPMethodOpts
+	StreamProgress  *StreamProgressInfo // Non-nil when server-streaming with MCPProgress
+	RequestType     string              // e.g. CountRequest
+	ResponseType    string              // e.g. CountResponse or result type for streaming
+	StreamChunkType string              // for streaming: e.g. CountStreamChunk
 }
 
 // RsTplParams is the top-level data fed into the Rust code template.
@@ -90,9 +94,16 @@ func (g *RustFileGenerator) buildRsParams() RsTplParams {
 	for _, svc := range g.f.Services {
 		methods := make(map[string]RsMethodInfo)
 
+		resolveType := func(ident protogen.GoIdent) string {
+			return string(ident.GoName)
+		}
 		for _, meth := range svc.Methods {
-			if meth.Desc.IsStreamingClient() || meth.Desc.IsStreamingServer() {
+			if meth.Desc.IsStreamingClient() {
 				continue
+			}
+			streamProgress := DetectProgressStream(meth, resolveType)
+			if meth.Desc.IsStreamingServer() && streamProgress == nil {
+				continue // Server-streaming without MCPProgress convention is not supported
 			}
 
 			key := string(svc.Desc.Name()) + "_" + meth.GoName
@@ -135,12 +146,24 @@ func (g *RustFileGenerator) buildRsParams() RsTplParams {
 				Description: desc,
 			}
 
+			reqType := string(meth.Input.Desc.Name())
+			respType := string(meth.Output.Desc.Name())
+			streamChunkType := ""
+			if streamProgress != nil && streamProgress.ResultMessage != nil {
+				respType = string(streamProgress.ResultMessage.Desc.Name())
+				streamChunkType = string(meth.Output.Desc.Name())
+			}
+
 			methods[meth.GoName] = RsMethodInfo{
-				RsMethodName: toSnakeCase(meth.GoName),
-				ConstName:    toScreamingSnakeCase(key),
-				ToolName:     toolName,
-				Description:  desc,
-				MethodOpts:   methOpts,
+				RsMethodName:    toSnakeCase(meth.GoName),
+				ConstName:       toScreamingSnakeCase(key),
+				ToolName:        toolName,
+				Description:     desc,
+				MethodOpts:     methOpts,
+				StreamProgress:  streamProgress,
+				RequestType:    reqType,
+				ResponseType:   respType,
+				StreamChunkType: streamChunkType,
 			}
 		}
 

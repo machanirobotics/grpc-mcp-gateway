@@ -1,0 +1,49 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "ProgressProto";
+option java_package = "com.mcp.protobuf";
+
+// MCPProgress is sent in server-streaming RPC chunks to report progress to MCP clients.
+// Use in a oneof with your result type:
+//
+//	message CreateTodoStreamChunk {
+//	  oneof payload {
+//	    mcp.protobuf.MCPProgress progress = 1;
+//	    Todo result = 2;
+//	  }
+//	}
+//	rpc CreateTodo(CreateTodoRequest) returns (stream CreateTodoStreamChunk) {
+//	  option (mcp.protobuf.tool) = { progress: true };
+//	}
+//
+// How to send _meta (MCP client):
+//
+// When calling a tool, include progressToken in params._meta. The progressToken
+// can be a string or integer; it correlates progress notifications with the request.
+//
+//	{
+//	  "method": "tools/call",
+//	  "params": {
+//	    "name": "counter_service-count_v1",
+//	    "arguments": { "to": 5 },
+//	    "_meta": { "progressToken": "abc123" }
+//	  }
+//	}
+//
+// The gateway forwards progressToken via gRPC metadata (key: mcp-progress-token).
+// gRPC servers can check metadata to only send MCPProgress chunks when requested.
+//
+// The plugin auto-generates MCP tool handlers that send progress notifications
+// and return the final result.
+message MCPProgress {
+  // Progress value so far (must increase with each chunk).
+  double progress = 1;
+  // Optional total; omit if unknown.
+  optional double total = 2;
+  // Human-readable status message.
+  string message = 3;
+}

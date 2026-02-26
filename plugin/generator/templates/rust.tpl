@@ -6,6 +6,7 @@
 
 use std::sync::Arc;
 use async_trait::async_trait;
+use tokio_stream::StreamExt;
 use rmcp::{ErrorData as McpError, RoleServer, ServerHandler, ServiceExt, model::*, service::RequestContext};
 use serde_json::{self, json, Value};
 
@@ -24,7 +25,9 @@ const {{ $info.ConstName }}_SCHEMA_JSON: &str = r##"{{ index $.SchemaJSON (print
 #[async_trait]
 pub trait {{ $svcName }}McpServer: Send + Sync + 'static {
 {{- range $methName, $info := $methods }}
+{{- if not $info.StreamProgress }}
     async fn {{ $info.RsMethodName }}(&self, args: Value) -> Result<Value, McpError>;
+{{- end }}
 {{- end }}
 }
 
@@ -38,6 +41,16 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
     pub fn new(svc: T) -> Self { Self { inner: Arc::new(svc) } }
 
     fn tools() -> Vec<Tool> {
+        vec![
+        {{- range $methName, $info := $methods }}
+        {{- if not $info.StreamProgress }}
+            make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),
+        {{- end }}
+        {{- end }}
+        ]
+    }
+
+    fn all_tools() -> Vec<Tool> {
         vec![
         {{- range $methName, $info := $methods }}
             make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),
@@ -123,6 +136,7 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
         let args = request.arguments.map_or_else(|| Value::Object(Default::default()), Value::Object);
         match request.name.as_ref() {
         {{- range $methName, $info := $methods }}
+        {{- if not $info.StreamProgress }}
             "{{ $info.ToolName }}" => {
 {{- if and $info.MethodOpts $info.MethodOpts.Elicitation }}
                 if let Ok(schema) = ElicitationSchema::from_json_schema(
@@ -154,6 +168,7 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
                     .map_err(|e| McpError::internal_error(format!("serialize response: {e}"), None))?;
                 Ok(CallToolResult::success(vec![Content::text(text)]))
             }
+        {{- end }}
         {{- end }}
             _ => Err(McpError::internal_error(format!("unknown tool: {}", request.name), None)),
         }
@@ -202,6 +217,125 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
 }
 
 pub const {{ $svcName | screamingSnakeCase }}_MCP_DEFAULT_BASE_PATH: &str = "{{ index $.ServiceBasePaths $svcName }}";
+
+{{- $hasStreaming := false }}
+{{- range $methName, $info := $methods }}
+{{- if $info.StreamProgress }}{{ $hasStreaming = true }}{{ end }}
+{{- end }}
+{{- if $hasStreaming }}
+
+struct {{ $svcName }}McpEmpty;
+#[async_trait]
+impl {{ $svcName }}McpServer for {{ $svcName }}McpEmpty {}
+
+/// Client trait for forwarding streaming RPCs. Implement for your gRPC client or use the tonic-generated client.
+#[async_trait]
+pub trait {{ $svcName }}McpForwardClient: Send + Sync + 'static {
+{{- range $methName, $info := $methods }}
+{{- if $info.StreamProgress }}
+    async fn {{ $info.RsMethodName }}(
+        &mut self,
+        req: super::{{ $info.RequestType }},
+    ) -> std::result::Result<
+        tonic::Response<tonic::codec::Streaming<super::{{ $info.StreamChunkType }}>>,
+        tonic::Status,
+    >;
+{{- end }}
+{{- end }}
+}
+
+/// Handler that forwards tool calls to a gRPC client. Use for services with streaming (progress) RPCs.
+pub struct {{ $svcName }}McpForwardHandler<C: {{ $svcName }}McpForwardClient> {
+    client: std::sync::Mutex<C>,
+}
+
+impl<C: {{ $svcName }}McpForwardClient> {{ $svcName }}McpForwardHandler<C> {
+    pub fn new(client: C) -> Self {
+        Self { client: std::sync::Mutex::new(client) }
+    }
+}
+
+impl<C: {{ $svcName }}McpForwardClient> Clone for {{ $svcName }}McpForwardHandler<C>
+where
+    C: Clone,
+{
+    fn clone(&self) -> Self {
+        Self { client: std::sync::Mutex::new(self.client.lock().unwrap().clone()) }
+    }
+}
+
+impl<C: {{ $svcName }}McpForwardClient> ServerHandler for {{ $svcName }}McpForwardHandler<C> {
+    fn get_info(&self) -> ServerInfo {
+        ServerInfo {
+            capabilities: ServerCapabilities::builder().enable_tools().build(),
+            server_info: Implementation { name: "{{ $svcName }}".into(), version: "0.1.0".into(), ..Default::default() },
+            ..Default::default()
+        }
+    }
+
+    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
+        Ok(ListToolsResult::with_all_items({{ $svcName }}McpHandler::<{{ $svcName }}McpEmpty>::all_tools()))
+    }
+
+    async fn call_tool(&self, request: CallToolRequestParams, _context: RequestContext<RoleServer>) -> Result<CallToolResult, McpError> {
+        let args = request.arguments.map_or_else(|| Value::Object(Default::default()), Value::Object);
+        match request.name.as_ref() {
+        {{- range $methName, $info := $methods }}
+        {{- if $info.StreamProgress }}
+            "{{ $info.ToolName }}" => {
+                let req: super::{{ $info.RequestType }} = serde_json::from_value(args)
+                    .map_err(|e| McpError::internal_error(format!("parse request: {e}"), None))?;
+                let mut guard = self.client.lock().map_err(|_| McpError::internal_error("client lock poisoned", None))?;
+                let mut stream = guard.{{ $info.RsMethodName }}(req).await
+                    .map_err(|e| McpError::internal_error(format!("gRPC error: {e}"), None))?;
+                drop(guard);
+                let mut result = None;
+                while let Some(chunk) = stream.next().await {
+                    let chunk = chunk.map_err(|e| McpError::internal_error(format!("stream error: {e}"), None))?;
+                    match chunk.payload {
+                        Some(super::{{ $info.StreamChunkType | snakeCase }}::Payload::Progress(_)) => {}
+                        Some(super::{{ $info.StreamChunkType | snakeCase }}::Payload::Result(r)) => {
+                            result = Some(r);
+                            break;
+                        }
+                        _ => {}
+                    }
+                }
+                let resp = result.ok_or_else(|| McpError::internal_error("stream ended without result", None))?;
+                let text = serde_json::to_string(&resp)
+                    .map_err(|e| McpError::internal_error(format!("serialize: {e}"), None))?;
+                Ok(CallToolResult::success(vec![Content::text(text)]))
+            }
+        {{- end }}
+        {{- end }}
+            _ => Err(McpError::internal_error(format!("unknown tool: {}", request.name), None)),
+        }
+    }
+}
+
+/// Implement {{ $svcName }}McpForwardClient for the tonic-generated client.
+#[async_trait]
+impl<T> {{ $svcName }}McpForwardClient for super::{{ $svcName | snakeCase }}_client::{{ $svcName }}Client<T>
+where
+    T: tonic::client::GrpcService<tonic::body::Body> + Send + Sync + 'static,
+    T::ResponseBody: tonic::body::Body + Send + 'static,
+    T::Error: Into<std::boxed::Box<dyn std::error::Error + Send + Sync>>,
+{
+{{- range $methName, $info := $methods }}
+{{- if $info.StreamProgress }}
+    async fn {{ $info.RsMethodName }}(
+        &mut self,
+        req: super::{{ $info.RequestType }},
+    ) -> std::result::Result<
+        tonic::Response<tonic::codec::Streaming<super::{{ $info.StreamChunkType }}>>,
+        tonic::Status,
+    > {
+        self.{{ $info.RsMethodName }}(req).await
+    }
+{{- end }}
+{{- end }}
+}
+{{- end }}
 
 pub struct {{ $svcName }}McpTransportConfig {
     pub transport: String,

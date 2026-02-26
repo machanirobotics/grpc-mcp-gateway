@@ -2,11 +2,18 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"strings"
 
 	"google.golang.org/grpc/metadata"
 )
+
+// GRPCProgressTokenKey is the gRPC metadata key for the MCP progress token.
+// When an MCP client sends progressToken in params._meta, the gateway forwards
+// it via this metadata key. gRPC servers can check for its presence to decide
+// whether to send MCPProgress chunks (skip overhead when client doesn't want progress).
+const GRPCProgressTokenKey = "mcp-progress-token"
 
 // HeaderMapping maps an HTTP header name to a gRPC metadata key.
 // Used with MCPServerConfig.HeaderMappings to forward headers from MCP HTTP
@@ -55,6 +62,25 @@ func ForwardMetadata(ctx context.Context) context.Context {
 	if len(md) == 0 {
 		return ctx
 	}
+	return metadata.NewOutgoingContext(ctx, md)
+}
+
+// WithProgressToken adds the MCP progress token to outgoing gRPC metadata.
+// Call this before forwarding to a gRPC backend when the MCP client sent
+// progressToken in params._meta. The backend can read it via metadata.FromIncomingContext
+// and key GRPCProgressTokenKey to decide whether to send progress chunks.
+func WithProgressToken(ctx context.Context, token any) context.Context {
+	if token == nil {
+		return ctx
+	}
+	// MCP progressToken can be string or int; serialize for metadata.
+	str := fmt.Sprint(token)
+	md, _ := metadata.FromOutgoingContext(ctx)
+	if md == nil {
+		md = metadata.MD{}
+	}
+	md = md.Copy()
+	md.Set(GRPCProgressTokenKey, str)
 	return metadata.NewOutgoingContext(ctx, md)
 }
 

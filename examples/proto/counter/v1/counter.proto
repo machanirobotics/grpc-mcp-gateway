@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package counter.v1;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/counter/counterpbv1;counterpbv1";
+option java_multiple_files = true;
+option java_outer_classname = "CounterProto";
+option java_package = "com.counter.v1";
+
+import "mcp/protobuf/annotations.proto";
+import "mcp/protobuf/field.proto";
+
+// Request to count from 0 up to a target number.
+message CountRequest {
+  // The number to count up to (e.g. 10).
+  int32 to = 1 [
+    (mcp.protobuf.field) = {
+      description: "Count from 0 up to this number. Progress updates are sent each step."
+      examples: "5"
+      examples: "10"
+    }
+  ];
+}
+
+// Response containing the final count.
+message CountResponse {
+  // The final count value.
+  int32 count = 1;
+}

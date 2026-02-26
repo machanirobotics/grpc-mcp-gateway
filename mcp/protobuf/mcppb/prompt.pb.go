@@ -106,7 +106,12 @@ type MCPToolOptions struct {
 	// Override the auto-generated MCP tool name.
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
 	// Override the tool description (defaults to the RPC's leading comment).
-	Description   string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	// When true, this RPC supports MCP progress notifications. Clients may include
+	// progressToken in params._meta; the server will send progress updates during
+	// execution. Requires a server-streaming RPC whose response has a oneof with
+	// mcp.protobuf.MCPProgress and the result type.
+	Progress      *bool `protobuf:"varint,3,opt,name=progress,proto3,oneof" json:"progress,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -155,6 +160,13 @@ func (x *MCPToolOptions) GetDescription() string {
 	return ""
 }
 
+func (x *MCPToolOptions) GetProgress() bool {
+	if x != nil && x.Progress != nil {
+		return *x.Progress
+	}
+	return false
+}
+
 var File_mcp_protobuf_prompt_proto protoreflect.FileDescriptor
 
 const file_mcp_protobuf_prompt_proto_rawDesc = "" +
@@ -163,10 +175,12 @@ const file_mcp_protobuf_prompt_proto_rawDesc = "" +
 	"\tMCPPrompt\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x16\n" +
-	"\x06schema\x18\x03 \x01(\tR\x06schema\"F\n" +
+	"\x06schema\x18\x03 \x01(\tR\x06schema\"t\n" +
 	"\x0eMCPToolOptions\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
-	"\vdescription\x18\x02 \x01(\tR\vdescriptionBa\n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1f\n" +
+	"\bprogress\x18\x03 \x01(\bH\x00R\bprogress\x88\x01\x01B\v\n" +
+	"\t_progressBa\n" +
 	"\x10com.mcp.protobufB\vPromptProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppbb\x06proto3"
 
 var (
@@ -199,6 +213,7 @@ func file_mcp_protobuf_prompt_proto_init() {
 	if File_mcp_protobuf_prompt_proto != nil {
 		return
 	}
+	file_mcp_protobuf_prompt_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

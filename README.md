@@ -18,6 +18,7 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 - **Prompts** — Attach prompt templates to RPCs with schema-validated arguments via `(mcp.protobuf.prompt)`
 - **Field descriptions** — Add `(mcp.protobuf.field) = { description: "..." }` to message fields for schema descriptions
 - **Enum descriptions** — Add `(mcp.protobuf.enum)` and `(mcp.protobuf.enum_value)` for enum-level and per-value descriptions in the schema
+- **Progress** — Use gRPC server streaming with `mcp.protobuf.MCPProgress` for MCP progress notifications on long-running tools
 - **Resources** — Auto-detect MCP resources from `google.api.resource` annotations
 - **Elicitation** — Generate confirmation dialogs before tool execution via `(mcp.protobuf.elicitation)`
 - **Transports** — stdio, SSE, and streamable-http — run multiple concurrently in a single process
@@ -333,6 +334,27 @@ The schema includes:
 
 For enum fields, enum descriptions take precedence over `(mcp.protobuf.field)` description when both are present.
 
+### Progress (server streaming)
+
+For long-running operations, use gRPC server streaming with `mcp.protobuf.MCPProgress` to send progress notifications to MCP clients. Define a stream response with a oneof:
+
+```protobuf
+import "mcp/protobuf/progress.proto";
+
+message CreateTodoStreamChunk {
+  oneof payload {
+    mcp.protobuf.MCPProgress progress = 1;
+    Todo result = 2;
+  }
+}
+
+rpc CreateTodo(CreateTodoRequest) returns (stream CreateTodoStreamChunk);
+```
+
+The plugin auto-generates tool handlers that send MCP `notifications/progress` for each progress chunk and return the final result. Progress is supported when using `ForwardTo*MCPClient` (gRPC forwarding). Clients request progress by including `progressToken` in `params._meta`.
+
+**Progress and timeouts**: Long-running requests that send progress must not time out. The gateway uses `ReadTimeout: 0` and `WriteTimeout: 0` by default so streaming progress is never interrupted. If you set `WriteTimeout` in `MCPServerConfig`, use `0` or a very high value for progress-enabled tools. MCP clients (e.g. Inspector) may have their own timeout; enable timeout reset on progress when available (`MCP_REQUEST_TIMEOUT_RESET_ON_PROGRESS`). If you see **"MCP error -32001: Maximum total timeout exceeded"**, the client has a hard cap on total request time (Inspector default: 60s). Increase it, e.g. `MCP_REQUEST_MAX_TOTAL_TIMEOUT=300000` (5 min, in ms).
+
 ### Resources
 
 Resources are auto-detected from `google.api.resource` annotations on proto messages. No additional MCP annotation is needed.
@@ -484,6 +506,12 @@ npx @modelcontextprotocol/inspector -- <command>
 # HTTP (start server first, then open Inspector)
 npx @modelcontextprotocol/inspector
 # Enter URL: http://localhost:8082/todo/v1/todoservice/mcp
+```
+
+For long-running tools with progress, increase the Inspector's max total timeout (default 60s):
+
+```bash
+MCP_REQUEST_MAX_TOTAL_TIMEOUT=300000 npx @modelcontextprotocol/inspector
 ```
 
 ## License

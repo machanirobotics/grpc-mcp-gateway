@@ -26,9 +26,10 @@ type ToolMeta struct {
 
 // MethodInfo carries the Go type identifiers needed by the code template.
 type MethodInfo struct {
-	RequestType  string
-	ResponseType string
-	MethodOpts   *MCPMethodOpts
+	RequestType    string
+	ResponseType   string
+	MethodOpts     *MCPMethodOpts
+	StreamProgress *StreamProgressInfo // Non-nil when server-streaming with MCPProgress
 }
 
 // TplParams is the top-level data fed into the code template.
@@ -142,9 +143,13 @@ func (g *FileGenerator) buildParams() TplParams {
 		methods := make(map[string]MethodInfo)
 
 		for _, meth := range svc.Methods {
-			// Only unary RPCs are supported.
-			if meth.Desc.IsStreamingClient() || meth.Desc.IsStreamingServer() {
+			// Skip client-streaming; support unary and server-streaming (progress) RPCs.
+			if meth.Desc.IsStreamingClient() {
 				continue
+			}
+			streamProgress := DetectProgressStream(meth, resolveType)
+			if meth.Desc.IsStreamingServer() && streamProgress == nil {
+				continue // Server-streaming without MCPProgress convention is not supported
 			}
 
 			key := string(svc.Desc.Name()) + "_" + meth.GoName
@@ -187,10 +192,15 @@ func (g *FileGenerator) buildParams() TplParams {
 				Description: toolDesc,
 			}
 
+			responseType := resolveType(meth.Output.GoIdent)
+			if streamProgress != nil {
+				responseType = streamProgress.ResultType
+			}
 			methods[meth.GoName] = MethodInfo{
-				RequestType:  resolveType(meth.Input.GoIdent),
-				ResponseType: resolveType(meth.Output.GoIdent),
-				MethodOpts:   methOpts,
+				RequestType:    resolveType(meth.Input.GoIdent),
+				ResponseType:   responseType,
+				MethodOpts:     methOpts,
+				StreamProgress: streamProgress,
 			}
 		}
 

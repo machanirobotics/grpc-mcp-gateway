@@ -8,6 +8,7 @@ package {{ .GoPackage }}
 
 import (
 	"context"
+	"errors"
 
 {{- range .ExtraImports }}
 	{{ . }}
@@ -36,10 +37,13 @@ var (
 
 // {{ $svcName }}MCPServer is the interface that users implement to handle MCP
 // tool calls backed by {{ $svcName }} RPCs. Each method mirrors a unary RPC
-// from the protobuf service definition.
+// from the protobuf service definition. Server-streaming RPCs (with progress)
+// are only supported via ForwardTo{{ $svcName }}MCPClient.
 type {{ $svcName }}MCPServer interface {
 {{- range $methName, $tool := $methods }}
+{{- if not $tool.StreamProgress }}
 	{{ $methName }}(ctx context.Context, req *{{ $tool.RequestType }}) (*{{ $tool.ResponseType }}, error)
+{{- end }}
 {{- end }}
 }
 
@@ -47,7 +51,11 @@ type {{ $svcName }}MCPServer interface {
 // tool calls to a remote gRPC server. It matches the generated gRPC client stub.
 type {{ $svcName }}MCPClient interface {
 {{- range $methName, $tool := $methods }}
+{{- if $tool.StreamProgress }}
+	{{ $methName }}(ctx context.Context, req *{{ $tool.RequestType }}, opts ...grpc.CallOption) ({{ $tool.StreamProgress.StreamClientType }}, error)
+{{- else }}
 	{{ $methName }}(ctx context.Context, req *{{ $tool.RequestType }}, opts ...grpc.CallOption) (*{{ $tool.ResponseType }}, error)
+{{- end }}
 {{- end }}
 }
 {{- end }}
@@ -63,11 +71,13 @@ type {{ $svcName }}MCPClient interface {
 // tools, prompts, resources, and apps on the given server based on proto options.
 func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer, opts ...runtime.Option) {
 	cfg := runtime.ApplyOptions(opts...)
+	_ = cfg
 {{- if and $svcOpts $svcOpts.App }}
 	appResourceURI := runtime.AppResourceURI("{{ $svcName }}")
 {{- end }}
 
 {{- range $methName, $tool := $methods }}
+{{- if not $tool.StreamProgress }}
 	{
 		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
 {{- if and $svcOpts $svcOpts.App }}
@@ -103,6 +113,7 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			return runtime.TextResult(string(out)), nil
 		})
 	}
+{{- end }}
 {{- end }}
 {{- if and $svcOpts $svcOpts.Resources }}
 
@@ -243,6 +254,35 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 				return nil, err
 			}
 			ctx = runtime.ForwardMetadata(ctx)
+{{- if $tool.StreamProgress }}
+			if token := req.Params.GetProgressToken(); token != nil {
+				ctx = runtime.WithProgressToken(ctx, token)
+			}
+			stream, err := client.{{ $methName }}(ctx, &pbReq)
+			if err != nil {
+				return runtime.HandleError(err)
+			}
+			token := req.Params.GetProgressToken()
+			for {
+				chunk, err := stream.Recv()
+				if err != nil {
+					if errors.Is(err, context.Canceled) {
+						return nil, err
+					}
+					return runtime.HandleError(err)
+				}
+				switch {
+				case chunk.Get{{ $tool.StreamProgress.ProgressField }}() != nil:
+					_ = runtime.SendProgressFromProto(ctx, req.Session, token, chunk.Get{{ $tool.StreamProgress.ProgressField }}())
+				case chunk.Get{{ $tool.StreamProgress.ResultField }}() != nil:
+					out, err := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.Get{{ $tool.StreamProgress.ResultField }}())
+					if err != nil {
+						return nil, err
+					}
+					return runtime.TextResult(string(out)), nil
+				}
+			}
+{{- else }}
 			resp, err := client.{{ $methName }}(ctx, &pbReq)
 			if err != nil {
 				return runtime.HandleError(err)
@@ -252,6 +292,7 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 				return nil, err
 			}
 			return runtime.TextResult(string(out)), nil
+{{- end }}
 		})
 	}
 {{- end }}
