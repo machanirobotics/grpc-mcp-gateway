@@ -44,6 +44,7 @@ type TplParams struct {
 	ServiceBasePaths  map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
 	ServiceOpts       map[string]*MCPServiceOpts  // key: ServiceName
 	HasStreamProgress bool                        // true if any method uses server streaming with progress
+	HasAnyMethods     bool                        // true if any service has any methods (needed for grpc/protojson imports)
 }
 
 // FileGenerator produces a single *.pb.mcp.go file from a protobuf file.
@@ -228,7 +229,11 @@ func (g *FileGenerator) buildParams() TplParams {
 	sort.Strings(extraImports)
 
 	hasStreamProgress := false
+	hasAnyMethods := false
 	for _, methods := range services {
+		if len(methods) > 0 {
+			hasAnyMethods = true
+		}
 		for _, info := range methods {
 			if info.StreamProgress != nil {
 				hasStreamProgress = true
@@ -251,5 +256,6 @@ func (g *FileGenerator) buildParams() TplParams {
 		ServiceBasePaths:  serviceBasePaths,
 		ServiceOpts:       serviceOpts,
 		HasStreamProgress: hasStreamProgress,
+		HasAnyMethods:     hasAnyMethods,
 	}
 }

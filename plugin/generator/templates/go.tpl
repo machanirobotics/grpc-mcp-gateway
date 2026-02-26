@@ -16,8 +16,10 @@ import (
 	{{ . }}
 {{- end }}
 	"github.com/modelcontextprotocol/go-sdk/mcp"
+{{- if .HasAnyMethods }}
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
+{{- end }}
 
 	"github.com/machanirobotics/grpc-mcp-gateway/runtime"
 )
@@ -226,6 +228,7 @@ func Serve{{ $svcName }}MCP(ctx context.Context, srv {{ $svcName }}MCPServer, cf
 // remote gRPC server via the provided client stub.
 func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPClient, opts ...runtime.Option) {
 	cfg := runtime.ApplyOptions(opts...)
+	_ = cfg
 {{- if and $svcOpts $svcOpts.App }}
 	appResourceURI := runtime.AppResourceURI("{{ $svcName }}")
 {{- end }}
