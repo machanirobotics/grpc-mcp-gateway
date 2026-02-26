@@ -51,14 +51,22 @@ func main() {
 	protogen.Options{
 		ParamFunc: flags.Set,
 	}.Run(func(gen *protogen.Plugin) error {
-		for _, f := range gen.Files {
-			if !f.Generate {
-				continue
-			}
-			if *lang == "all" {
+		if *lang == "all" {
+			for _, f := range gen.Files {
+				if !f.Generate {
+					continue
+				}
 				if err := generator.GenerateAll(f, gen, *packageSuffix); err != nil {
 					return err
 				}
+			}
+			return generator.GenerateCppBatch(gen)
+		}
+		if *lang == "cpp" {
+			return generator.GenerateCppBatch(gen)
+		}
+		for _, f := range gen.Files {
+			if !f.Generate {
 				continue
 			}
 			if err := generator.GenerateFile(f, gen, generator.GenerateOptions{

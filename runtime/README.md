@@ -20,6 +20,7 @@ The runtime package provides:
 - **Elicitation** — `RunElicitation`, `ElicitField` for confirmation dialogs
 - **Metadata** — `ForwardMetadata`, `HeadersMiddleware`, `DefaultHeaderMappings` for HTTP→gRPC header forwarding
 - **App/Resource** — `DefaultPromptHandler`, `DefaultResourceHandler`, `DefaultAppResourceHandler`, `AppResourceURI`, `SetToolAppMeta`
+- **Cancellation** — Generated streaming tool handlers honor [MCP cancellation](https://modelcontextprotocol.io/specification/2025-03-26/basic/utilities/cancellation): when the client sends `notifications/cancelled`, the SDK cancels the request context; the gRPC stream returns `context.Canceled`; the handler returns without sending a response
 
 ## Quick Start
 
@@ -82,6 +83,8 @@ transports := runtime.ParseTransports(os.Getenv("MCP_TRANSPORT"))
 | `BasePath`            | HTTP path prefix (default `/mcp`)                |
 | `GeneratedBasePath`   | Proto-derived path (takes precedence)           |
 | `HeaderMappings`      | HTTP header → gRPC metadata forwarding          |
+| `ReadTimeout`         | Max duration for reading request (0 = no limit)  |
+| `WriteTimeout`        | Max duration for writing response (0 = no limit; keep 0 for progress) |
 | `OnReady`             | Callback before server starts                    |
 
 ### Header forwarding

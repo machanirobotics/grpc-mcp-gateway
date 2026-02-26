@@ -1,8 +1,7 @@
 version: v2
+# Single input (no paths) ensures strategy:all gets one plugin invocation with all files.
 inputs:
   - directory: proto
-    paths:
-      - proto/todo
 plugins:
   # --- Go ---
   - local: protoc-gen-go
@@ -39,8 +38,10 @@ plugins:
       - lang=rust
       - paths=source_relative
   # --- C++ MCP bridge (header + cxx.rs) ---
+  # strategy: all avoids duplicate shared outputs when multiple proto packages exist.
   - local: protoc-gen-mcp
     out: proto/generated/cpp
+    strategy: all
     opt:
       - lang=cpp
       - paths=source_relative

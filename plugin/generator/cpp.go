@@ -58,13 +58,10 @@ func NewCppFileGenerator(f *protogen.File, gen *protogen.Plugin) *CppFileGenerat
 	return &CppFileGenerator{f: f, gen: gen}
 }
 
-// Generate produces four output files:
-//
-//	<dir>/<stem>.mcp.h     — C++ gRPC-client adapter header
-//	<dir>/<stem>.mcp.cc    — C++ gRPC-client adapter implementation
-//	rust/lib.rs            — Rust cxx bridge with bidirectional FFI
-//	rust/mcp_handler.rs    — Rust rmcp ServerHandler
-func (g *CppFileGenerator) Generate() {
+// Generate produces per-file outputs (.mcp.h, .mcp.cc) and optionally shared
+// outputs (rust/*, Makefile, main.cc). When multiple proto packages exist,
+// emitShared should be true only for the first file to avoid duplicate outputs.
+func (g *CppFileGenerator) Generate(emitShared bool) {
 	file := g.f
 	if len(file.Services) == 0 {
 		return
@@ -105,20 +102,15 @@ func (g *CppFileGenerator) Generate() {
 	// 2. C++ implementation
 	genFile(filepath.Join(dir, stem+".mcp.cc"), "cpp/impl.tpl")
 
-	// 3. Rust cxx bridge — rust/lib.rs
-	genFile("rust/lib.rs", "cpp/bridge.tpl")
-
-	// 4. Rust MCP handler — rust/mcp_handler.rs
-	genFile("rust/mcp_handler.rs", "cpp/handler.tpl")
-
-	// 5. Rust project files
-	genFile("rust/Cargo.toml", "cpp/cargo_toml.tpl")
-	genFile("rust/build.rs", "cpp/build_rs.tpl")
-	genFile("rust/mcp_include.h", "cpp/mcp_include.tpl")
-
-	// 6. Makefile and generated main
-	genFile("Makefile", "cpp/makefile.tpl")
-	genFile("main.cc", "cpp/main.tpl")
+	if emitShared {
+		genFile("rust/lib.rs", "cpp/bridge.tpl")
+		genFile("rust/mcp_handler.rs", "cpp/handler.tpl")
+		genFile("rust/Cargo.toml", "cpp/cargo_toml.tpl")
+		genFile("rust/build.rs", "cpp/build_rs.tpl")
+		genFile("rust/mcp_include.h", "cpp/mcp_include.tpl")
+		genFile("Makefile", "cpp/makefile.tpl")
+		genFile("main.cc", "cpp/main.tpl")
+	}
 }
 
 func (g *CppFileGenerator) buildCppParams(dir, stem string) CppTplParams {

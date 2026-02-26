@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Protocol
+from typing import Any, Iterator, Protocol
 
 import mcp.types as types
 from mcp.server.fastmcp import FastMCP
@@ -31,15 +31,22 @@ from google.protobuf.json_format import MessageToDict, ParseDict
 {{- range $svcName, $methods := .Services }}
 
 class {{ $svcName }}MCPServer(Protocol):
-    """Protocol that users implement to handle MCP tool calls backed by {{ $svcName }} RPCs."""
+    """Protocol that users implement to handle MCP tool calls backed by {{ $svcName }} RPCs.
+    Server-streaming RPCs (with progress) are only supported via forward_to_{{ $svcName | snakeCase }}_mcp_client."""
 {{- range $methName, $tool := $methods }}
+{{- if not $tool.StreamProgress }}
     async def {{ $tool.PyMethodName }}(self, request: {{ $tool.PyRequestType }}) -> {{ $tool.PyResponseType }}: ...
+{{- end }}
 {{- end }}
 
 class {{ $svcName }}MCPClient(Protocol):
     """gRPC client protocol used when forwarding MCP tool calls to a remote server."""
 {{- range $methName, $tool := $methods }}
+{{- if $tool.StreamProgress }}
+    def {{ $tool.PyMethodName }}(self, request: {{ $tool.PyRequestType }}) -> Iterator[{{ $tool.PyStreamChunkType }}]: ...
+{{- else }}
     async def {{ $tool.PyMethodName }}(self, request: {{ $tool.PyRequestType }}) -> {{ $tool.PyResponseType }}: ...
+{{- end }}
 {{- end }}
 {{- end }}
 
@@ -53,6 +60,16 @@ _ALL_TOOLS: list[types.Tool] = [
     {{ $key }}_TOOL,
 {{- end }}
 ]
+
+_STREAMING_TOOL_NAMES: frozenset[str] = frozenset({
+{{- range $svcName, $methods := .Services }}
+{{- range $methName, $tool := $methods }}
+{{- if $tool.StreamProgress }}
+    "{{ $tool.ToolName }}",
+{{- end }}
+{{- end }}
+{{- end }}
+})
 
 {{- range $svcName, $methods := .Services }}
 {{- $svcOpts := index $.ServiceOpts $svcName }}
@@ -110,11 +127,12 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
-        return _ALL_TOOLS
+        return [t for t in _ALL_TOOLS if t.name not in _STREAMING_TOOL_NAMES]
 
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
 {{- range $methName, $tool := $methods }}
+{{- if not $tool.StreamProgress }}
         if name == "{{ $tool.ToolName }}":
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
             try:
@@ -138,6 +156,7 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
             req = ParseDict(arguments, {{ $tool.PyRequestType }}())
             resp = await impl.{{ $tool.PyMethodName }}(req)
             return [types.TextContent(type="text", text=json.dumps(MessageToDict(resp, preserving_proto_field_name=True, always_print_fields_with_no_presence=True)))]
+{{- end }}
 {{- end }}
         raise ValueError(f"Unknown tool: {name}")
 
@@ -258,8 +277,34 @@ def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ 
                 pass  # Client does not support elicitation; proceed with tool call.
 {{- end }}
             req = ParseDict(arguments, {{ $tool.PyRequestType }}())
+{{- if $tool.StreamProgress }}
+            _progress_token = None
+            try:
+                _params = server.request_context.request.params
+                if _params.meta is not None:
+                    _progress_token = _params.meta.progressToken
+            except Exception:
+                pass
+            stream = client.{{ $tool.PyMethodName }}(req)
+            session = server.request_context.session
+            for chunk in stream:
+                if chunk.HasField("{{ $tool.StreamProgress.ProgressField | snakeCase }}"):
+                    _p = chunk.{{ $tool.StreamProgress.ProgressField | snakeCase }}
+                    if _progress_token is not None:
+                        await session.send_progress_notification(
+                            _progress_token,
+                            progress=_p.progress,
+                            total=_p.total if _p.HasField("total") else None,
+                            message=_p.message or None,
+                        )
+                elif chunk.HasField("{{ $tool.StreamProgress.ResultField | snakeCase }}"):
+                    resp = chunk.{{ $tool.StreamProgress.ResultField | snakeCase }}
+                    return [types.TextContent(type="text", text=json.dumps(MessageToDict(resp, preserving_proto_field_name=True, always_print_fields_with_no_presence=True)))]
+            raise ValueError("Stream ended without result")
+{{- else }}
             resp = await client.{{ $tool.PyMethodName }}(req)
             return [types.TextContent(type="text", text=json.dumps(MessageToDict(resp, preserving_proto_field_name=True, always_print_fields_with_no_presence=True)))]
+{{- end }}
 {{- end }}
         raise ValueError(f"Unknown tool: {name}")
 {{- end }}

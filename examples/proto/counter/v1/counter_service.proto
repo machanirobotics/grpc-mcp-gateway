@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package counter.v1;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/examples/proto/generated/go/counter/counterpbv1;counterpbv1";
+option java_multiple_files = true;
+option java_outer_classname = "CounterServiceProto";
+option java_package = "com.counter.v1";
+
+import "mcp/protobuf/annotations.proto";
+import "mcp/protobuf/progress.proto";
+import "counter/v1/counter.proto";
+
+// Counter service demonstrates MCP progress via server streaming.
+service CounterService {
+  option (mcp.protobuf.service) = {
+    app: {
+      name: "Counter App"
+      version: "1.0.0"
+      description: "A simple counter that streams progress as it counts"
+    }
+  };
+
+  // Counts from 0 up to the requested number, streaming progress updates.
+  rpc Count(CountRequest) returns (stream CountStreamChunk) {
+    option (mcp.protobuf.tool) = {
+      description: "Counts from 0 up to the given number. Sends progress updates as it counts. Use with progressToken in _meta for progress notifications."
+      progress: true
+    };
+  }
+}
+
+// Stream chunk sent during Count: either progress or the final result.
+message CountStreamChunk {
+  oneof payload {
+    mcp.protobuf.MCPProgress progress = 1;
+    CountResponse result = 2;
+  }
+}

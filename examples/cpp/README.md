@@ -112,18 +112,19 @@ MCP_TRANSPORT=stdio npx @modelcontextprotocol/inspector -- ./server
 ## Troubleshooting
 
 **"MCP HTTP server failed" / "Address already in use"** — Port 8082 is already in use (e.g. another server instance). Either:
+
 - Kill the process: `lsof -i :8082` then `kill <PID>`
 - Use a different port: `MCP_PORT=8083 ./server`
 
 ## Environment Variables
 
-| Variable | Default | Description |
-|---|---|---|
-| `GRPC_ADDR` | `[::]:50051` | gRPC server listen address |
-| `MCP_TRANSPORT` | `http` | `http` or `stdio` |
-| `MCP_HOST` | `0.0.0.0` | MCP HTTP bind address |
-| `MCP_PORT` | `8082` | MCP HTTP port |
-| `MCP_BASE_PATH` | `/todo/v1/todoservice/mcp` | MCP HTTP base path |
+| Variable        | Default                    | Description                |
+| --------------- | -------------------------- | -------------------------- |
+| `GRPC_ADDR`     | `[::]:50051`               | gRPC server listen address |
+| `MCP_TRANSPORT` | `http`                     | `http` or `stdio`          |
+| `MCP_HOST`      | `0.0.0.0`                  | MCP HTTP bind address      |
+| `MCP_PORT`      | `8082`                     | MCP HTTP port              |
+| `MCP_BASE_PATH` | `/todo/v1/todoservice/mcp` | MCP HTTP base path         |
 
 ## Project Layout
 
@@ -165,17 +166,17 @@ graph TD
     GEN --> MF_GEN & MAIN_GEN & PROTO & MCP_CPP & RUST
 ```
 
-| Path | What | Who writes it |
-|---|---|---|
-| `template/` | Reference C++ templates. Copy to `src/` to start. | **Reference** |
-| `src/grpc_server.h/cc` | Your gRPC service. Pure C++, zero FFI. | **You** |
-| `src/todo_store.h` | Your data store. | **You** |
-| `src/main.cc` | Optional. If present, overrides generated `main.cc`. | **You** (optional) |
-| `proto/generated/cpp/main.cc` | C++ entry point. Starts gRPC, attaches MCP. | `protoc-gen-mcp` |
-| `proto/generated/cpp/Makefile` | Delegates to cpp/. | `protoc-gen-mcp` |
-| `cpp/Makefile` | Build root. Invokes cargo, compiles C++, links. Binary → cpp/server | **Project** |
-| `proto/generated/cpp/rust/*` | Full Rust project (Cargo.toml, build.rs, lib.rs, mcp_handler.rs, mcp_include.h). | `protoc-gen-mcp` |
-| `proto/generated/cpp/todo/v1/*.mcp.h/cc` | C++ gRPC-client adapter. JSON ↔ protobuf. | `protoc-gen-mcp` |
+| Path                                     | What                                                                             | Who writes it      |
+| ---------------------------------------- | -------------------------------------------------------------------------------- | ------------------ |
+| `template/`                              | Reference C++ templates. Copy to `src/` to start.                                | **Reference**      |
+| `src/grpc_server.h/cc`                   | Your gRPC service. Pure C++, zero FFI.                                           | **You**            |
+| `src/todo_store.h`                       | Your data store.                                                                 | **You**            |
+| `src/main.cc`                            | Optional. If present, overrides generated `main.cc`.                             | **You** (optional) |
+| `proto/generated/cpp/main.cc`            | C++ entry point. Starts gRPC, attaches MCP.                                      | `protoc-gen-mcp`   |
+| `proto/generated/cpp/Makefile`           | Delegates to cpp/.                                                               | `protoc-gen-mcp`   |
+| `cpp/Makefile`                           | Build root. Invokes cargo, compiles C++, links. Binary → cpp/server              | **Project**        |
+| `proto/generated/cpp/rust/*`             | Full Rust project (Cargo.toml, build.rs, lib.rs, mcp_handler.rs, mcp_include.h). | `protoc-gen-mcp`   |
+| `proto/generated/cpp/todo/v1/*.mcp.h/cc` | C++ gRPC-client adapter. JSON ↔ protobuf.                                        | `protoc-gen-mcp`   |
 
 ## Customizing main.cc
 

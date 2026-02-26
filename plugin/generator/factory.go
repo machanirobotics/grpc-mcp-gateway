@@ -2,6 +2,7 @@ package generator
 
 import (
 	"fmt"
+	"sort"
 
 	"google.golang.org/protobuf/compiler/protogen"
 )
@@ -30,6 +31,9 @@ type GenerateOptions struct {
 	Lang Language
 	// PackageSuffix is Go-specific: sub-package suffix for generated files.
 	PackageSuffix string
+	// CppEmitShared, when Lang is Cpp, controls whether to emit shared files
+	// (rust/*, Makefile, main.cc). Nil defaults to true.
+	CppEmitShared *bool
 }
 
 // GenerateFile dispatches code generation for a single protobuf file to the
@@ -43,7 +47,11 @@ func GenerateFile(f *protogen.File, gen *protogen.Plugin, opts GenerateOptions) 
 	case Rust:
 		NewRustFileGenerator(f, gen).Generate()
 	case Cpp:
-		NewCppFileGenerator(f, gen).Generate()
+		emitShared := true
+		if opts.CppEmitShared != nil {
+			emitShared = *opts.CppEmitShared
+		}
+		NewCppFileGenerator(f, gen).Generate(emitShared)
 	default:
 		return fmt.Errorf("unsupported language: %q (supported: %s)", opts.Lang, supportedList())
 	}
@@ -51,13 +59,40 @@ func GenerateFile(f *protogen.File, gen *protogen.Plugin, opts GenerateOptions) 
 }
 
 // GenerateAll runs code generation for every target language on a single
-// protobuf file. Useful for mono-repo setups that publish bindings for
-// all languages at once.
+// protobuf file. Cpp is excluded; use GenerateCppBatch for C++.
 func GenerateAll(f *protogen.File, gen *protogen.Plugin, packageSuffix string) error {
 	for _, lang := range SupportedLanguages() {
+		if lang == Cpp {
+			continue
+		}
 		if err := GenerateFile(f, gen, GenerateOptions{
 			Lang:          lang,
 			PackageSuffix: packageSuffix,
+		}); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// GenerateCppBatch runs C++ generation for all files with services, emitting
+// shared files only for the first file to avoid duplicates.
+func GenerateCppBatch(gen *protogen.Plugin) error {
+	var files []*protogen.File
+	for _, f := range gen.Files {
+		if !f.Generate || len(f.Services) == 0 {
+			continue
+		}
+		files = append(files, f)
+	}
+	sort.Slice(files, func(i, j int) bool {
+		return files[i].Desc.Path() < files[j].Desc.Path()
+	})
+	for i, f := range files {
+		emitShared := i == 0
+		if err := GenerateFile(f, gen, GenerateOptions{
+			Lang:          Cpp,
+			CppEmitShared: &emitShared,
 		}); err != nil {
 			return err
 		}

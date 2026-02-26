@@ -56,6 +56,12 @@ pub struct McpToolOptions {
     /// Override the tool description (defaults to the RPC's leading comment).
     #[prost(string, tag="2")]
     pub description: ::prost::alloc::string::String,
+    /// When true, this RPC supports MCP progress notifications. Clients may include
+    /// progressToken in params._meta; the server will send progress updates during
+    /// execution. Requires a server-streaming RPC whose response has a oneof with
+    /// mcp.protobuf.MCPProgress and the result type.
+    #[prost(bool, optional, tag="3")]
+    pub progress: ::core::option::Option<bool>,
 }
 /// MCPElicitation defines a confirmation dialog shown to the user before
 /// a tool executes. Used as: option (mcp.protobuf.elicitation) = { ... };
@@ -218,6 +224,50 @@ impl McpMimeType {
             _ => None,
         }
     }
+}
+/// MCPProgress is sent in server-streaming RPC chunks to report progress to MCP clients.
+/// Use in a oneof with your result type:
+///
+/// 	message CreateTodoStreamChunk {
+/// 	  oneof payload {
+/// 	    mcp.protobuf.MCPProgress progress = 1;
+/// 	    Todo result = 2;
+/// 	  }
+/// 	}
+/// 	rpc CreateTodo(CreateTodoRequest) returns (stream CreateTodoStreamChunk) {
+/// 	  option (mcp.protobuf.tool) = { progress: true };
+/// 	}
+///
+/// How to send _meta (MCP client):
+///
+/// When calling a tool, include progressToken in params._meta. The progressToken
+/// can be a string or integer; it correlates progress notifications with the request.
+///
+/// 	{
+/// 	  "method": "tools/call",
+/// 	  "params": {
+/// 	    "name": "counter_service-count_v1",
+/// 	    "arguments": { "to": 5 },
+/// 	    "_meta": { "progressToken": "abc123" }
+/// 	  }
+/// 	}
+///
+/// The gateway forwards progressToken via gRPC metadata (key: mcp-progress-token).
+/// gRPC servers can check metadata to only send MCPProgress chunks when requested.
+///
+/// The plugin auto-generates MCP tool handlers that send progress notifications
+/// and return the final result.
+#[derive(Clone, PartialEq, ::prost::Message)]
+pub struct McpProgress {
+    /// Progress value so far (must increase with each chunk).
+    #[prost(double, tag="1")]
+    pub progress: f64,
+    /// Optional total; omit if unknown.
+    #[prost(double, optional, tag="2")]
+    pub total: ::core::option::Option<f64>,
+    /// Human-readable status message.
+    #[prost(string, tag="3")]
+    pub message: ::prost::alloc::string::String,
 }
 /// MCPResource describes a data source exposed by an MCP server.
 #[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]

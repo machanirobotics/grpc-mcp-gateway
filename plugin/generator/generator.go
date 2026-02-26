@@ -26,22 +26,25 @@ type ToolMeta struct {
 
 // MethodInfo carries the Go type identifiers needed by the code template.
 type MethodInfo struct {
-	RequestType  string
-	ResponseType string
-	MethodOpts   *MCPMethodOpts
+	RequestType    string
+	ResponseType   string
+	MethodOpts     *MCPMethodOpts
+	StreamProgress *StreamProgressInfo // Non-nil when server-streaming with MCPProgress
 }
 
 // TplParams is the top-level data fed into the code template.
 type TplParams struct {
-	Version          string
-	SourcePath       string
-	GoPackage        string
-	ExtraImports     []string          // e.g. `emptypb "google.golang.org/.../emptypb"`
-	SchemaJSON       map[string]string // key: ServiceName_MethodName -> schema JSON
-	ToolMeta         map[string]ToolMeta
-	Services         map[string]map[string]MethodInfo
-	ServiceBasePaths map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
-	ServiceOpts      map[string]*MCPServiceOpts // key: ServiceName
+	Version           string
+	SourcePath        string
+	GoPackage         string
+	ExtraImports      []string          // e.g. `emptypb "google.golang.org/.../emptypb"`
+	SchemaJSON        map[string]string // key: ServiceName_MethodName -> schema JSON
+	ToolMeta          map[string]ToolMeta
+	Services          map[string]map[string]MethodInfo
+	ServiceBasePaths  map[string]string          // key: ServiceName -> default base path e.g. "/todo/v1/TodoService"
+	ServiceOpts       map[string]*MCPServiceOpts  // key: ServiceName
+	HasStreamProgress bool                        // true if any method uses server streaming with progress
+	HasAnyMethods     bool                        // true if any service has any methods (needed for grpc/protojson imports)
 }
 
 // FileGenerator produces a single *.pb.mcp.go file from a protobuf file.
@@ -142,9 +145,13 @@ func (g *FileGenerator) buildParams() TplParams {
 		methods := make(map[string]MethodInfo)
 
 		for _, meth := range svc.Methods {
-			// Only unary RPCs are supported.
-			if meth.Desc.IsStreamingClient() || meth.Desc.IsStreamingServer() {
+			// Skip client-streaming; support unary and server-streaming (progress) RPCs.
+			if meth.Desc.IsStreamingClient() {
 				continue
+			}
+			streamProgress := DetectProgressStream(meth, resolveType)
+			if meth.Desc.IsStreamingServer() && streamProgress == nil {
+				continue // Server-streaming without MCPProgress convention is not supported
 			}
 
 			key := string(svc.Desc.Name()) + "_" + meth.GoName
@@ -187,10 +194,15 @@ func (g *FileGenerator) buildParams() TplParams {
 				Description: toolDesc,
 			}
 
+			responseType := resolveType(meth.Output.GoIdent)
+			if streamProgress != nil {
+				responseType = streamProgress.ResultType
+			}
 			methods[meth.GoName] = MethodInfo{
-				RequestType:  resolveType(meth.Input.GoIdent),
-				ResponseType: resolveType(meth.Output.GoIdent),
-				MethodOpts:   methOpts,
+				RequestType:    resolveType(meth.Input.GoIdent),
+				ResponseType:   responseType,
+				MethodOpts:     methOpts,
+				StreamProgress: streamProgress,
 			}
 		}
 
@@ -216,15 +228,34 @@ func (g *FileGenerator) buildParams() TplParams {
 	}
 	sort.Strings(extraImports)
 
+	hasStreamProgress := false
+	hasAnyMethods := false
+	for _, methods := range services {
+		if len(methods) > 0 {
+			hasAnyMethods = true
+		}
+		for _, info := range methods {
+			if info.StreamProgress != nil {
+				hasStreamProgress = true
+				break
+			}
+		}
+		if hasStreamProgress {
+			break
+		}
+	}
+
 	return TplParams{
-		Version:          PluginVersion,
-		SourcePath:       g.f.Desc.Path(),
-		GoPackage:        string(g.f.GoPackageName),
-		ExtraImports:     extraImports,
-		SchemaJSON:       schemaJSON,
-		ToolMeta:         toolMeta,
-		Services:         services,
-		ServiceBasePaths: serviceBasePaths,
-		ServiceOpts:      serviceOpts,
+		Version:           PluginVersion,
+		SourcePath:        g.f.Desc.Path(),
+		GoPackage:         string(g.f.GoPackageName),
+		ExtraImports:      extraImports,
+		SchemaJSON:        schemaJSON,
+		ToolMeta:          toolMeta,
+		Services:          services,
+		ServiceBasePaths:  serviceBasePaths,
+		ServiceOpts:       serviceOpts,
+		HasStreamProgress: hasStreamProgress,
+		HasAnyMethods:     hasAnyMethods,
 	}
 }

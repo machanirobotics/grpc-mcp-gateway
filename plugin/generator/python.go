@@ -12,11 +12,13 @@ import (
 
 // PyMethodInfo carries Python-specific type identifiers for a single RPC method.
 type PyMethodInfo struct {
-	PyMethodName   string // snake_case method name
-	PyRequestType  string // e.g. todo_pb2.CreateTodoRequest
-	PyResponseType string // e.g. todo_pb2.Todo
-	ToolName       string // MCP tool name
-	MethodOpts     *MCPMethodOpts
+	PyMethodName     string // snake_case method name
+	PyRequestType    string // e.g. todo_pb2.CreateTodoRequest
+	PyResponseType   string // e.g. todo_pb2.Todo
+	PyStreamChunkType string // for streaming: e.g. counter_service_pb2.CountStreamChunk
+	ToolName         string // MCP tool name
+	MethodOpts       *MCPMethodOpts
+	StreamProgress   *StreamProgressInfo // Non-nil when server-streaming with MCPProgress
 }
 
 // PyTplParams is the top-level data fed into the Python code template.
@@ -88,8 +90,15 @@ func (g *PythonFileGenerator) buildPyParams() PyTplParams {
 		methods := make(map[string]PyMethodInfo)
 
 		for _, meth := range svc.Methods {
-			if meth.Desc.IsStreamingClient() || meth.Desc.IsStreamingServer() {
+			if meth.Desc.IsStreamingClient() {
 				continue
+			}
+			streamProgress := DetectProgressStream(meth, func(ident protogen.GoIdent) string {
+				// resolveType for Go; Python uses ResultMessage
+				return string(ident.GoName)
+			})
+			if meth.Desc.IsStreamingServer() && streamProgress == nil {
+				continue // Server-streaming without MCPProgress convention is not supported
 			}
 
 			key := string(svc.Desc.Name()) + "_" + meth.GoName
@@ -139,12 +148,23 @@ func (g *PythonFileGenerator) buildPyParams() PyTplParams {
 			pbImports[reqModule] = true
 			pbImports[respModule] = true
 
+			pyReqType := protoPyType(meth.Input)
+			pyRespType := protoPyType(meth.Output)
+			pyStreamChunkType := ""
+			if streamProgress != nil && streamProgress.ResultMessage != nil {
+				pyRespType = protoPyType(streamProgress.ResultMessage)
+				pyStreamChunkType = protoPyType(meth.Output)
+				pbImports[protoPyModule(streamProgress.ResultMessage)] = true
+			}
+
 			methods[meth.GoName] = PyMethodInfo{
-				PyMethodName:   toSnakeCase(meth.GoName),
-				PyRequestType:  protoPyType(meth.Input),
-				PyResponseType: protoPyType(meth.Output),
-				ToolName:       toolName,
-				MethodOpts:     methOpts,
+				PyMethodName:      toSnakeCase(meth.GoName),
+				PyRequestType:     pyReqType,
+				PyResponseType:    pyRespType,
+				PyStreamChunkType: pyStreamChunkType,
+				ToolName:          toolName,
+				MethodOpts:        methOpts,
+				StreamProgress:    streamProgress,
 			}
 		}
 

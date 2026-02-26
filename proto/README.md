@@ -108,6 +108,23 @@ enum Priority {
 }
 ```
 
+### Progress (server streaming)
+
+For long-running RPCs, use server streaming with `MCPProgress` to report progress:
+
+```protobuf
+import "mcp/protobuf/progress.proto";
+
+message CreateItemStreamChunk {
+  oneof payload {
+    mcp.protobuf.MCPProgress progress = 1;
+    Item result = 2;
+  }
+}
+
+rpc CreateItem(CreateItemRequest) returns (stream CreateItemStreamChunk);
+```
+
 ## Available Protos
 
 | File                                 | Description                                       |
@@ -120,6 +137,7 @@ enum Priority {
 | `mcp/protobuf/resource.proto`        | `MCPResource` message                             |
 | `mcp/protobuf/field.proto`           | `MCPFieldOptions` (description, examples, format) |
 | `mcp/protobuf/enum.proto`            | `MCPEnumOptions`, `MCPEnumValueOptions`           |
+| `mcp/protobuf/progress.proto`        | `MCPProgress` for server-streaming progress       |
 | `mcp/protobuf/field_type.proto`      | `MCPFieldType` enum                               |
 | `mcp/protobuf/mime_type.proto`       | `MCPMimeType` enum                                |
 

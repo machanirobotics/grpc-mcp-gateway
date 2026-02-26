@@ -6,8 +6,26 @@ import (
 	"strings"
 
 	"github.com/google/jsonschema-go/jsonschema"
+	"github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
+
+// SendProgressFromProto sends an MCP progress notification from an MCPProgress proto.
+// If token or p is nil, it returns nil. Used by generated streaming tool handlers.
+func SendProgressFromProto(ctx context.Context, session *mcp.ServerSession, token any, p *mcppb.MCPProgress) error {
+	if token == nil || p == nil {
+		return nil
+	}
+	params := &mcp.ProgressNotificationParams{
+		ProgressToken: token,
+		Progress:      p.Progress,
+		Message:       p.Message,
+	}
+	if p.Total != nil {
+		params.Total = *p.Total
+	}
+	return session.NotifyProgress(ctx, params)
+}
 
 // DefaultPromptHandler returns a prompt handler that produces a single user
 // message containing the prompt description. It is used as a placeholder for
