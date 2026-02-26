@@ -8,6 +8,8 @@ TodoService MCP server examples in Python, demonstrating all supported transport
 - [uv](https://docs.astral.sh/uv/) package manager
 - Generated code already in `proto/generated/python/` (run `buf generate` from `examples/`)
 
+The generated code includes both **TodoService** (`todo/v1/`) and **CounterService** (`counter/v1/`); the Python examples use TodoService.
+
 ## Structure
 
 ```

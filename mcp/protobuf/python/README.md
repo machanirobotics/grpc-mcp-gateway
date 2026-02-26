@@ -26,6 +26,7 @@ This package provides the Python bindings for:
 - **`mcp.protobuf.app`** — App info (`MCPApp`)
 - **`mcp.protobuf.field`** — Field description option (`MCPFieldOptions`)
 - **`mcp.protobuf.enum`** — Enum and enum-value descriptions (`MCPEnumOptions`, `MCPEnumValueOptions`)
+- **`mcp.protobuf.progress`** — Progress notifications (`MCPProgress`) for server-streaming RPCs
 - **`mcp.protobuf.field_type`** — Field type enums
 
 ## Usage

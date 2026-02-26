@@ -1,6 +1,6 @@
 # Go Examples
 
-TodoService MCP server examples in Go, demonstrating all supported transports.
+MCP server examples in Go: **TodoService** (CRUD, prompts, elicitation) and **CounterService** (progress streaming).
 
 ## Prerequisites
 
@@ -12,21 +12,24 @@ TodoService MCP server examples in Go, demonstrating all supported transports.
 
 ```
 go/
-├── http/          # streamable-http + gRPC side-by-side
+├── http/          # TodoService — streamable-http + gRPC side-by-side
 │   ├── main.go
 │   ├── impl.go
 │   └── smoke_test.go
-├── stdio/         # stdio transport (for Claude Desktop, MCP Inspector)
+├── stdio/         # TodoService — stdio transport (Claude Desktop, MCP Inspector)
 │   ├── main.go
 │   └── impl.go
-├── sse/           # SSE transport (legacy)
+├── sse/           # TodoService — SSE transport (legacy)
 │   ├── main.go
 │   └── impl.go
-└── grpc-gateway/  # gRPC-to-MCP gateway forwarding
-    └── main.go
+├── grpc-gateway/  # TodoService — gRPC-to-MCP gateway forwarding
+│   └── main.go
+└── counter/       # CounterService — progress streaming (streamable-http)
+    ├── main.go
+    └── impl.go
 ```
 
-Each transport has its own `impl.go` with an in-memory `todoServer` that implements both the gRPC `TodoServiceServer` and MCP `TodoServiceMCPServer` interfaces.
+**TodoService** examples use an in-memory `todoServer` implementing both gRPC `TodoServiceServer` and MCP `TodoServiceMCPServer`. **CounterService** demonstrates server-streaming with `mcp.protobuf.MCPProgress` for progress notifications.
 
 ## Running
 
@@ -74,6 +77,20 @@ go run .
 # MCP → 0.0.0.0:8080
 ```
 
+### Counter (Progress Streaming)
+
+Demonstrates MCP progress via server-streaming. Uses `ForwardToCounterServiceMCPClient` to forward tool calls to a gRPC backend:
+
+```bash
+cd examples/go/counter
+go run .
+# gRPC  → [::]:50052 (reflection + health)
+# MCP   → 0.0.0.0:8083/counter/v1/counterservice/mcp
+# Health → /health
+```
+
+Use `progressToken` in `params._meta` when calling the Count tool to receive progress notifications. For long runs, set `MCP_REQUEST_MAX_TOTAL_TIMEOUT=300000` when using MCP Inspector.
+
 ## Testing
 
 The `http/` example includes a smoke test that exercises the full CRUD pipeline over an in-memory MCP transport:
@@ -93,9 +110,14 @@ Test flow:
 
 ## Architecture
 
-The generated code (`todo_service.pb.mcp.go`) provides:
-- `TodoServiceMCPServer` interface — one method per RPC
-- `RegisterTodoServiceMCPHandler(s *mcp.Server, impl TodoServiceMCPServer, opts ...runtime.Option)` — registers all tools, prompts, and resources
-- `ServeTodoServiceMCP(impl, cfg)` — convenience function that creates the server and starts it
+**TodoService** (`todo_service.pb.mcp.go`):
+- `TodoServiceMCPServer` interface — one method per unary RPC
+- `RegisterTodoServiceMCPHandler(s, impl, opts...)` — registers tools, prompts, resources
+- `ServeTodoServiceMCP(impl, cfg)` — convenience function to start the server
+
+**CounterService** (`counter_service.pb.mcp.go`):
+- `CounterServiceMCPClient` interface — streaming Count RPC
+- `ForwardToCounterServiceMCPClient(s, client, opts...)` — forwards tool calls to gRPC, streams progress
+- Server-streaming with `mcp.protobuf.MCPProgress` for progress notifications
 
 The `runtime` package handles transport selection, multi-transport serving, header-to-metadata forwarding, and schema injection.

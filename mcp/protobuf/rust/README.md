@@ -30,6 +30,7 @@ This crate provides the Rust bindings (via [prost](https://crates.io/crates/pros
 - **`MCPApp`** — App info
 - **`MCPFieldOptions`** — Field description, examples, format, deprecated
 - **`MCPEnumOptions`**, **`MCPEnumValueOptions`** — Enum and enum-value descriptions
+- **`MCPProgress`** — Progress notifications for server-streaming RPCs
 - **`MCPMimeType`**, **`MCPFieldType`** — Enums
 
 ## Usage

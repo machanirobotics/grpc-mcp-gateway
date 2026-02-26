@@ -1,10 +1,17 @@
 # Examples
 
-End-to-end examples demonstrating how to expose a gRPC **TodoService** as an MCP server in Go, Python, and Rust using `grpc-mcp-gateway`.
+End-to-end examples demonstrating how to expose gRPC services as MCP servers in Go, Python, and Rust using `grpc-mcp-gateway`.
 
 ## Overview
 
-All three languages share the same proto definition and produce identical MCP tool surfaces. Each language example includes separate entrypoints for every supported transport:
+The examples include two proto services:
+
+| Service         | Proto Path           | Description                                      |
+| --------------- | -------------------- | ------------------------------------------------ |
+| **TodoService** | `proto/todo/v1/`      | CRUD, prompts, elicitation, resources            |
+| **CounterService** | `proto/counter/v1/` | Server-streaming with MCP progress notifications |
+
+All languages share the same proto definitions and produce identical MCP tool surfaces. Each language example includes separate entrypoints for every supported transport:
 
 | Transport | Description | Default Port |
 | ------------------- | ----------------------------------------- | ------------ |
@@ -12,9 +19,9 @@ All three languages share the same proto definition and produce identical MCP to
 | `stdio` | Stdin/stdout for CLI tools (Claude Desktop) | — |
 | `sse` | Server-Sent Events (legacy 2024-11-05 spec) | 8083 |
 
-## Proto Definition
+## Proto Definitions
 
-The TodoService proto lives in `proto/todo/v1/` and imports MCP annotations from the published BSR module:
+Protos live in `proto/todo/v1/` and `proto/counter/v1/`, importing MCP annotations from the published BSR module:
 
 ```yaml
 # buf.yaml
@@ -37,7 +44,7 @@ service TodoService {
 }
 ```
 
-The proto uses:
+**TodoService** uses:
 - **`mcp.protobuf.service`** — app-level metadata
 - **`mcp.protobuf.tool`** — per-RPC tool name/description overrides
 - **`mcp.protobuf.prompt`** — per-RPC prompt templates with schema-based arguments
@@ -45,6 +52,8 @@ The proto uses:
 - **`mcp.protobuf.field`** — field descriptions, examples, format for tool inputSchema
 - **`mcp.protobuf.enum`** / **`mcp.protobuf.enum_value`** — enum-level and per-value descriptions
 - **`google.api.resource`** — auto-detected MCP resources from AIP resource annotations
+
+**CounterService** demonstrates progress via server-streaming with `mcp.protobuf.MCPProgress` (see [Progress](https://github.com/machanirobotics/grpc-mcp-gateway#progress-server-streaming) in the main README).
 
 ## Code Generation
 
@@ -64,23 +73,29 @@ This produces:
 
 ## Generated MCP Tools
 
-All five CRUD operations are exposed as MCP tools:
+**TodoService** — five CRUD operations:
 
 | Tool Name | Description |
 | ------------------------------------ | ----------------------------------------- |
-| `todo_v1_TodoService_CreateTodo` | Creates a new todo item |
-| `todo_v1_TodoService_GetTodo` | Retrieves a todo by resource name |
-| `todo_v1_TodoService_ListTodos` | Lists todos with pagination |
-| `todo_v1_TodoService_UpdateTodo` | Updates an existing todo |
-| `todo_v1_TodoService_DeleteTodo` | Deletes a todo by resource name |
+| `todo_service-create_todo_v1` | Creates a new todo item |
+| `todo_service-get_todo_v1` | Retrieves a todo by resource name |
+| `todo_service-list_todos_v1` | Lists todos with pagination |
+| `todo_service-update_todo_v1` | Updates an existing todo |
+| `todo_service-delete_todo_v1` | Deletes a todo by resource name |
+
+**CounterService** — progress streaming:
+
+| Tool Name | Description |
+| ------------------------------------ | ----------------------------------------- |
+| `counter_service-count_v1` | Counts from 0 to N with progress updates |
 
 ## Language Examples
 
 | Language | Directory | Details |
 | -------- | ----------------------- | ---------------------------------- |
-| Go | [`go/`](go/) | Uses `runtime.StartServer` |
-| Python | [`python/`](python/) | Uses `FastMCP` / low-level `Server` |
-| Rust | [`rust/`](rust/) | Uses `rmcp` SDK with `ServerHandler` |
+| Go | [`go/`](go/) | TodoService (http, stdio, sse, grpc-gateway) + CounterService (counter) |
+| Python | [`python/`](python/) | TodoService — `FastMCP` / low-level `Server` |
+| Rust | [`rust/`](rust/) | TodoService — `rmcp` SDK with `ServerHandler` |
 
 Each has its own README with setup and run instructions.
 
@@ -90,7 +105,9 @@ For `streamable-http` or `sse` servers:
 
 ```bash
 npx @modelcontextprotocol/inspector
-# Enter the server URL, e.g. http://localhost:8082/todo/v1/todoservice/mcp
+# Enter the server URL, e.g.:
+#   TodoService:    http://localhost:8082/todo/v1/todoservice/mcp
+#   CounterService: http://localhost:8083/counter/v1/counterservice/mcp
 ```
 
 For `stdio` servers:

@@ -377,8 +377,8 @@ grpc-mcp-gateway/
 │   └── generator/                 # Code generation (Go, Python, Rust, C++)
 │       └── templates/             # go.tpl, python.tpl, rust.tpl, cpp/*.tpl
 ├── examples/                      # Separate module with replace directive
-│   ├── proto/                     # TodoService definition
-│   ├── go/                        # Go examples (http, stdio, sse, grpc-gateway)
+│   ├── proto/                     # TodoService + CounterService definitions
+│   ├── go/                        # Go examples (http, stdio, sse, grpc-gateway, counter)
 │   ├── python/                    # Python examples (http, stdio, sse)
 │   ├── rust/                      # Rust examples (http, stdio, sse)
 │   └── cpp/                       # C++ example (Make, gRPC + MCP via Rust bridge)
@@ -486,11 +486,16 @@ serve_todo_service_mcp(server, config).await?;
 
 ## Examples
 
-The [`examples/`](examples/) directory contains a complete TodoService implementation in all three languages, demonstrating tools, prompts, resources, and elicitation.
+The [`examples/`](examples/) directory contains **TodoService** (CRUD, prompts, elicitation) and **CounterService** (progress streaming) implementations:
+
+| Service        | Proto                    | Description                                      |
+| -------------- | ------------------------ | ------------------------------------------------ |
+| **TodoService** | `proto/todo/v1/`         | CRUD, prompts, elicitation, resources            |
+| **CounterService** | `proto/counter/v1/`  | Server-streaming with MCP progress notifications |
 
 | Language | Directory                             | Transports                     | Test                                    |
 | -------- | ------------------------------------- | ------------------------------ | --------------------------------------- |
-| Go       | [`examples/go/`](examples/go)         | http, stdio, sse, grpc-gateway | `go test ./examples/go/http/`           |
+| Go       | [`examples/go/`](examples/go)         | http, stdio, sse, grpc-gateway, counter | `go test ./examples/go/...`      |
 | Python   | [`examples/python/`](examples/python) | http, stdio, sse               | `uv run python -m pytest smoke_test.py` |
 | Rust     | [`examples/rust/`](examples/rust)     | http, stdio, sse               | `cargo check`                           |
 | C++      | [`examples/cpp/`](examples/cpp)       | streamable-http, stdio         | `make`                                  |
@@ -505,7 +510,7 @@ npx @modelcontextprotocol/inspector -- <command>
 
 # HTTP (start server first, then open Inspector)
 npx @modelcontextprotocol/inspector
-# Enter URL: http://localhost:8082/todo/v1/todoservice/mcp
+# Enter URL, e.g. http://localhost:8082/todo/v1/todoservice/mcp or http://localhost:8083/counter/v1/counterservice/mcp
 ```
 
 For long-running tools with progress, increase the Inspector's max total timeout (default 60s):
