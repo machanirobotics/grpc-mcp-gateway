@@ -84,6 +84,19 @@ func WithProgressToken(ctx context.Context, token any) context.Context {
 	return metadata.NewOutgoingContext(ctx, md)
 }
 
+// WithIncomingProgressToken adds the MCP progress token as incoming gRPC
+// metadata on the context. Use this for in-process (Register) streaming
+// handlers so that gRPC server methods that check
+// metadata.FromIncomingContext see the token and emit progress chunks.
+func WithIncomingProgressToken(ctx context.Context, token any) context.Context {
+	if token == nil {
+		return ctx
+	}
+	str := fmt.Sprint(token)
+	md := metadata.New(map[string]string{GRPCProgressTokenKey: str})
+	return metadata.NewIncomingContext(ctx, md)
+}
+
 // HeadersMiddleware returns HTTP middleware that extracts configured headers
 // from the incoming request and stores them in the request context.
 // These headers are later available via ForwardMetadata.

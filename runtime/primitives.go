@@ -13,7 +13,7 @@ import (
 // SendProgressFromProto sends an MCP progress notification from an MCPProgress proto.
 // If token or p is nil, it returns nil. Used by generated streaming tool handlers.
 func SendProgressFromProto(ctx context.Context, session *mcp.ServerSession, token any, p *mcppb.MCPProgress) error {
-	if token == nil || p == nil {
+	if token == nil || p == nil || session == nil {
 		return nil
 	}
 	params := &mcp.ProgressNotificationParams{
@@ -25,6 +25,22 @@ func SendProgressFromProto(ctx context.Context, session *mcp.ServerSession, toke
 		params.Total = *p.Total
 	}
 	return session.NotifyProgress(ctx, params)
+}
+
+// SendDoneProgress sends a final MCP progress notification (progress=1, total=1)
+// with resultJSON as the message, signaling to the MCP client that the streaming
+// operation has completed. Generated non-blocking streaming handlers call this
+// when the result chunk arrives from the gRPC server method.
+func SendDoneProgress(ctx context.Context, session *mcp.ServerSession, token any, resultJSON string) error {
+	if token == nil || session == nil {
+		return nil
+	}
+	one := 1.0
+	return SendProgressFromProto(ctx, session, token, &mcppb.MCPProgress{
+		Progress: 1.0,
+		Total:    &one,
+		Message:  resultJSON,
+	})
 }
 
 // DefaultPromptHandler returns a prompt handler that produces a single user

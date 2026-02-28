@@ -10,6 +10,7 @@ import (
 	"context"
 {{- if .HasStreamProgress }}
 	"errors"
+	"fmt"
 {{- end }}
 
 {{- range .ExtraImports }}
@@ -40,12 +41,15 @@ var (
 {{- range $svcName, $methods := .Services }}
 
 // {{ $svcName }}MCPServer is the interface that users implement to handle MCP
-// tool calls backed by {{ $svcName }} RPCs. Each method mirrors a unary RPC
-// from the protobuf service definition. Server-streaming RPCs (with progress)
-// are only supported via ForwardTo{{ $svcName }}MCPClient.
+// tool calls backed by {{ $svcName }} RPCs. Unary RPCs take (ctx, req) and
+// return (resp, error). Server-streaming RPCs (with MCPProgress) take (req,
+// stream) matching the gRPC server interface — any type implementing
+// {{ $svcName }}Server automatically satisfies this interface.
 type {{ $svcName }}MCPServer interface {
 {{- range $methName, $tool := $methods }}
-{{- if not $tool.StreamProgress }}
+{{- if $tool.StreamProgress }}
+	{{ $methName }}(req *{{ $tool.RequestType }}, stream {{ $tool.StreamProgress.StreamServerType }}) error
+{{- else }}
 	{{ $methName }}(ctx context.Context, req *{{ $tool.RequestType }}) (*{{ $tool.ResponseType }}, error)
 {{- end }}
 {{- end }}
@@ -81,7 +85,75 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- end }}
 
 {{- range $methName, $tool := $methods }}
-{{- if not $tool.StreamProgress }}
+{{- if $tool.StreamProgress }}
+	{
+		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
+{{- if and $svcOpts $svcOpts.App }}
+		tool = runtime.SetToolAppMeta(tool, appResourceURI)
+{{- end }}
+		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
+{{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
+			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
+			{{- range $tool.MethodOpts.Elicitation.Fields }}
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+			{{- end }}
+			})
+			if elicitErr != nil {
+				return nil, elicitErr
+			}
+			if elicitResult.Action != "accept" {
+				return runtime.TextResult("Action cancelled by user."), nil
+			}
+{{- end }}
+			var pbReq {{ $tool.RequestType }}
+			args, ctx := runtime.ExtractExtras(ctx, req.Params.Arguments, cfg)
+			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(args, &pbReq); err != nil {
+				return nil, err
+			}
+			token := req.Params.GetProgressToken()
+			session := req.Session
+			// notifCtx uses context.Background() so the MCP streamable transport
+			// routes progress notifications to the standalone SSE stream rather than
+			// the already-responded request stream.
+			// grpcCtx is detached from the tool-call cancellation so the gRPC server
+			// method can complete its stream after the HTTP response has been sent.
+			// WithIncomingProgressToken sets the token as incoming gRPC metadata so
+			// the server method sees it via metadata.FromIncomingContext.
+			notifCtx := context.Background()
+			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
+			stream := runtime.NewInProcessServerStream[*{{ $tool.StreamProgress.StreamChunkType }}](grpcCtx)
+			errCh := make(chan error, 1)
+			go func() {
+				defer stream.Close()
+				errCh <- srv.{{ $methName }}(&pbReq, stream)
+			}()
+			go func() {
+				for {
+					chunk, ok := stream.Recv()
+					if !ok {
+						if err := <-errCh; err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						}
+						return
+					}
+					switch {
+					case chunk.Get{{ $tool.StreamProgress.ProgressField }}() != nil:
+						_ = runtime.SendProgressFromProto(notifCtx, session, token, chunk.Get{{ $tool.StreamProgress.ProgressField }}())
+					case chunk.Get{{ $tool.StreamProgress.ResultField }}() != nil:
+						out, err := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.Get{{ $tool.StreamProgress.ResultField }}())
+						if err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						} else {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, string(out))
+						}
+						return
+					}
+				}
+			}()
+			return runtime.TextResult(`{"status":"started"}`), nil
+		})
+	}
+{{- else }}
 	{
 		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
 {{- if and $svcOpts $svcOpts.App }}
