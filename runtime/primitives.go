@@ -13,7 +13,7 @@ import (
 // SendProgressFromProto sends an MCP progress notification from an MCPProgress proto.
 // If token or p is nil, it returns nil. Used by generated streaming tool handlers.
 func SendProgressFromProto(ctx context.Context, session *mcp.ServerSession, token any, p *mcppb.MCPProgress) error {
-	if token == nil || p == nil {
+	if token == nil || p == nil || session == nil {
 		return nil
 	}
 	params := &mcp.ProgressNotificationParams{

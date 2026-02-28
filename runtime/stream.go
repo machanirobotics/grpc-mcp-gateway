@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"fmt"
 
 	grpcmd "google.golang.org/grpc/metadata"
 )
@@ -65,5 +66,19 @@ func (s *InProcessServerStream[T]) Context() context.Context { return s.ctx }
 func (s *InProcessServerStream[T]) SetHeader(grpcmd.MD) error  { return nil }
 func (s *InProcessServerStream[T]) SendHeader(grpcmd.MD) error { return nil }
 func (s *InProcessServerStream[T]) SetTrailer(grpcmd.MD)       {}
-func (s *InProcessServerStream[T]) SendMsg(any) error          { return nil }
-func (s *InProcessServerStream[T]) RecvMsg(any) error          { return nil }
+
+// SendMsg type-asserts m to T and forwards it to Send. Returns an error if
+// the assertion fails so that unsupported usage is caught immediately rather
+// than silently dropping the message.
+func (s *InProcessServerStream[T]) SendMsg(m any) error {
+	if msg, ok := m.(T); ok {
+		return s.Send(msg)
+	}
+	return fmt.Errorf("InProcessServerStream.SendMsg: unexpected type %T", m)
+}
+
+// RecvMsg is not supported for a server stream; it returns an error to make
+// unsupported usage fail fast instead of silently succeeding.
+func (s *InProcessServerStream[T]) RecvMsg(any) error {
+	return fmt.Errorf("InProcessServerStream.RecvMsg: not supported")
+}

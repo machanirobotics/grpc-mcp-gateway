@@ -10,6 +10,7 @@ import (
 	"context"
 {{- if .HasStreamProgress }}
 	"errors"
+	"fmt"
 {{- end }}
 
 {{- range .ExtraImports }}
@@ -116,25 +117,35 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			// the already-responded request stream.
 			// grpcCtx is detached from the tool-call cancellation so the gRPC server
 			// method can complete its stream after the HTTP response has been sent.
+			// WithIncomingProgressToken sets the token as incoming gRPC metadata so
+			// the server method sees it via metadata.FromIncomingContext.
 			notifCtx := context.Background()
-			grpcCtx := context.WithoutCancel(ctx)
+			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
 			stream := runtime.NewInProcessServerStream[*{{ $tool.StreamProgress.StreamChunkType }}](grpcCtx)
+			errCh := make(chan error, 1)
 			go func() {
 				defer stream.Close()
-				_ = srv.{{ $methName }}(&pbReq, stream)
+				errCh <- srv.{{ $methName }}(&pbReq, stream)
 			}()
 			go func() {
 				for {
 					chunk, ok := stream.Recv()
 					if !ok {
+						if err := <-errCh; err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						}
 						return
 					}
 					switch {
 					case chunk.Get{{ $tool.StreamProgress.ProgressField }}() != nil:
 						_ = runtime.SendProgressFromProto(notifCtx, session, token, chunk.Get{{ $tool.StreamProgress.ProgressField }}())
 					case chunk.Get{{ $tool.StreamProgress.ResultField }}() != nil:
-						out, _ := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.Get{{ $tool.StreamProgress.ResultField }}())
-						_ = runtime.SendDoneProgress(notifCtx, session, token, string(out))
+						out, err := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.Get{{ $tool.StreamProgress.ResultField }}())
+						if err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						} else {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, string(out))
+						}
 						return
 					}
 				}
