@@ -59,7 +59,8 @@ func TestRegisterCounterServiceMCPHandler(t *testing.T) {
 		ProgressNotificationHandler: func(_ context.Context, req *mcp.ProgressNotificationClientRequest) {
 			mu.Lock()
 			progressNotifs = append(progressNotifs, *req.Params)
-			isFinal := req.Params.Progress >= 1.0
+			// SendDoneProgress sets Total=1.0 as the sentinel for completion.
+			isFinal := req.Params.Total == 1.0
 			mu.Unlock()
 			if isFinal {
 				closeOnce.Do(func() { close(gotFinal) })
@@ -130,7 +131,8 @@ func TestRegisterCounterServiceMCPHandler(t *testing.T) {
 
 	var finalMsg string
 	for _, n := range notifs {
-		if n.Progress >= 1.0 {
+		// SendDoneProgress uses Total=1.0 as the completion sentinel.
+		if n.Total == 1.0 {
 			finalMsg = n.Message
 			break
 		}
@@ -138,6 +140,21 @@ func TestRegisterCounterServiceMCPHandler(t *testing.T) {
 	if !strings.Contains(finalMsg, `"count"`) {
 		t.Fatalf("final progress message missing 'count' field: %s", finalMsg)
 	}
+
+	// 5. Verify at least one intermediate notification (Total > 1.0) was
+	// received. The Register path now forwards the progressToken as incoming gRPC
+	// metadata so the counter implementation emits per-step progress chunks.
+	hasIntermediate := false
+	for _, n := range notifs {
+		if n.Total > 1.0 {
+			hasIntermediate = true
+			break
+		}
+	}
+	if !hasIntermediate {
+		t.Fatalf("expected at least one intermediate progress notification (Total > 1.0); got %v", notifs)
+	}
+
 	t.Logf("Progress notifications received: %d", len(notifs))
 	t.Logf("Final result notification: %s", finalMsg)
 }

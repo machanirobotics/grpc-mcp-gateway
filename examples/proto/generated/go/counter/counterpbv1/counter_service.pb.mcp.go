@@ -9,6 +9,7 @@ package counterpbv1
 import (
 	"context"
 	"errors"
+	"fmt"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 	"google.golang.org/grpc"
 	"google.golang.org/protobuf/encoding/protojson"
@@ -62,25 +63,35 @@ func RegisterCounterServiceMCPHandler(s *mcp.Server, srv CounterServiceMCPServer
 			// the already-responded request stream.
 			// grpcCtx is detached from the tool-call cancellation so the gRPC server
 			// method can complete its stream after the HTTP response has been sent.
+			// WithIncomingProgressToken sets the token as incoming gRPC metadata so
+			// the server method sees it via metadata.FromIncomingContext.
 			notifCtx := context.Background()
-			grpcCtx := context.WithoutCancel(ctx)
+			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
 			stream := runtime.NewInProcessServerStream[*CountStreamChunk](grpcCtx)
+			errCh := make(chan error, 1)
 			go func() {
 				defer stream.Close()
-				_ = srv.Count(&pbReq, stream)
+				errCh <- srv.Count(&pbReq, stream)
 			}()
 			go func() {
 				for {
 					chunk, ok := stream.Recv()
 					if !ok {
+						if err := <-errCh; err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						}
 						return
 					}
 					switch {
 					case chunk.GetProgress() != nil:
 						_ = runtime.SendProgressFromProto(notifCtx, session, token, chunk.GetProgress())
 					case chunk.GetResult() != nil:
-						out, _ := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.GetResult())
-						_ = runtime.SendDoneProgress(notifCtx, session, token, string(out))
+						out, err := (protojson.MarshalOptions{UseProtoNames: true, EmitDefaultValues: true}).Marshal(chunk.GetResult())
+						if err != nil {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, fmt.Sprintf(`{"error":%q}`, err.Error()))
+						} else {
+							_ = runtime.SendDoneProgress(notifCtx, session, token, string(out))
+						}
 						return
 					}
 				}
