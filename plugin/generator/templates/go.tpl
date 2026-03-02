@@ -93,11 +93,12 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
-			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
+			elicitFields := []runtime.ElicitField{
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
-				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
-			})
+			}
+			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
 				return nil, elicitErr
 			}
@@ -107,6 +108,9 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- end }}
 			var pbReq {{ $tool.RequestType }}
 			args, ctx := runtime.ExtractExtras(ctx, req.Params.Arguments, cfg)
+{{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
+			args = runtime.MergeElicitResult(args, elicitResult.Content, elicitFields)
+{{- end }}
 			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(args, &pbReq); err != nil {
 				return nil, err
 			}
@@ -161,11 +165,12 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
-			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
+			elicitFields := []runtime.ElicitField{
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
-				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
-			})
+			}
+			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
 				return nil, elicitErr
 			}
@@ -175,6 +180,9 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- end }}
 			var pbReq {{ $tool.RequestType }}
 			args, ctx := runtime.ExtractExtras(ctx, req.Params.Arguments, cfg)
+{{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
+			args = runtime.MergeElicitResult(args, elicitResult.Content, elicitFields)
+{{- end }}
 			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(args, &pbReq); err != nil {
 				return nil, err
 			}
@@ -313,11 +321,12 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
-			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", []runtime.ElicitField{
+			elicitFields := []runtime.ElicitField{
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
-				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}},
+				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
-			})
+			}
+			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
 				return nil, elicitErr
 			}
@@ -327,6 +336,9 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 {{- end }}
 			var pbReq {{ $tool.RequestType }}
 			args, ctx := runtime.ExtractExtras(ctx, req.Params.Arguments, cfg)
+{{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
+			args = runtime.MergeElicitResult(args, elicitResult.Content, elicitFields)
+{{- end }}
 			if err := (protojson.UnmarshalOptions{DiscardUnknown: true}).Unmarshal(args, &pbReq); err != nil {
 				return nil, err
 			}

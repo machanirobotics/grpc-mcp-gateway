@@ -46,6 +46,7 @@ func ResolveSchemaFields(gen *protogen.Plugin, schemaFQN string) []SchemaField {
 				}
 				friendly := enumValueFriendlyName(name, string(field.Enum.Desc.Name()))
 				sf.EnumValues = append(sf.EnumValues, friendly)
+				sf.EnumProtoNames = append(sf.EnumProtoNames, name)
 			}
 			sf.Type = "string" // enums are presented as string choices
 		}
@@ -56,11 +57,12 @@ func ResolveSchemaFields(gen *protogen.Plugin, schemaFQN string) []SchemaField {
 
 // SchemaField is a resolved field from a schema proto message.
 type SchemaField struct {
-	Name        string
-	Description string
-	Required    bool
-	Type        string
-	EnumValues  []string
+	Name           string
+	Description    string
+	Required       bool
+	Type           string
+	EnumValues     []string // friendly lowercased names shown in the elicitation form
+	EnumProtoNames []string // proto enum names, parallel to EnumValues, used for reverse-mapping after elicitation
 }
 
 // findMessage recursively searches for a message by fully-qualified name.
