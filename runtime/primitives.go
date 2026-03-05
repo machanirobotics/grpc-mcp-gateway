@@ -2,6 +2,7 @@ package runtime
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"strings"
 
@@ -162,7 +163,51 @@ type ElicitField struct {
 	Description string   // Shown in the form
 	Required    bool     // If true, user must provide a value
 	Type        string   // JSON Schema type: "string", "number", "boolean"
-	EnumValues  []string // Optional: restrict to these values (autocomplete)
+	EnumValues  []string // Optional: friendly names shown in the elicitation form
+	ProtoValues []string // Optional: proto enum names, parallel to EnumValues, for reverse-mapping after accept
+}
+
+// MergeElicitResult overlays the accepted elicitation result content onto the
+// original LLM tool args JSON. Enum fields whose ElicitField has ProtoValues
+// are reverse-mapped from their friendly UI names back to their protobuf enum
+// names so that protojson.Unmarshal decodes them correctly. The returned bytes
+// are always valid JSON.
+func MergeElicitResult(args json.RawMessage, content map[string]any, fields []ElicitField) json.RawMessage {
+	if len(content) == 0 {
+		return args
+	}
+	// Build friendly-name → proto-name lookup per field.
+	protoMap := make(map[string]map[string]string, len(fields))
+	for _, f := range fields {
+		if len(f.ProtoValues) > 0 && len(f.ProtoValues) == len(f.EnumValues) {
+			m := make(map[string]string, len(f.EnumValues))
+			for i, friendly := range f.EnumValues {
+				m[friendly] = f.ProtoValues[i]
+			}
+			protoMap[f.Name] = m
+		}
+	}
+	// Unmarshal existing args.
+	var merged map[string]any
+	if err := json.Unmarshal(args, &merged); err != nil || merged == nil {
+		merged = make(map[string]any)
+	}
+	// Overlay elicitation content, reverse-mapping enum values where needed.
+	for k, v := range content {
+		if m, ok := protoMap[k]; ok {
+			if s, ok := v.(string); ok {
+				if proto, ok := m[s]; ok {
+					v = proto
+				}
+			}
+		}
+		merged[k] = v
+	}
+	out, err := json.Marshal(merged)
+	if err != nil {
+		return args
+	}
+	return out
 }
 
 // RunElicitation performs an elicitation request on the server session,

@@ -32,11 +32,12 @@ type MCPPromptOpts struct {
 
 // MCPPromptArgOpts describes a single prompt argument resolved from a schema message.
 type MCPPromptArgOpts struct {
-	Name        string
-	Description string
-	Required    bool
-	Type        string
-	EnumValues  []string
+	Name           string
+	Description    string
+	Required       bool
+	Type           string
+	EnumValues     []string
+	EnumProtoNames []string // kept in sync with SchemaField to allow direct struct type conversion
 }
 
 // MCPResourceOpts mirrors MCPResource for templates.
@@ -58,9 +59,10 @@ type MCPElicitationOpts struct {
 
 // MCPElicitFieldOpts describes a single elicitation field resolved from a schema message.
 type MCPElicitFieldOpts struct {
-	Name        string
-	Description string
-	Required    bool
-	Type        string
-	EnumValues  []string
+	Name           string
+	Description    string
+	Required       bool
+	Type           string
+	EnumValues     []string // friendly lowercased names shown in the elicitation form
+	EnumProtoNames []string // proto enum names, parallel to EnumValues, used for reverse-mapping after elicitation
 }
