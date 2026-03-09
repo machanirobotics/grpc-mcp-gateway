@@ -98,6 +98,13 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
 			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
+			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
 				return nil, elicitErr
@@ -169,6 +176,13 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
+			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
 			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
@@ -325,6 +339,13 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
+			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
 			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
