@@ -123,15 +123,12 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			}
 			token := req.Params.GetProgressToken()
 			session := req.Session
-			// notifCtx uses context.Background() so the MCP streamable transport
-			// routes progress notifications to the standalone SSE stream rather than
-			// the already-responded request stream.
-			// grpcCtx is detached from the tool-call cancellation so the gRPC server
-			// method can complete its stream after the HTTP response has been sent.
-			// WithIncomingProgressToken sets the token as incoming gRPC metadata so
-			// the server method sees it via metadata.FromIncomingContext.
+			// notifCtx is unbound so progress notifications are not tied to the
+			// tool-call request lifetime.
+			// grpcCtx uses the session context: outlives the HTTP request but
+			// cancels when the MCP session closes, stopping the gRPC goroutine.
 			notifCtx := context.Background()
-			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
+			grpcCtx := runtime.WithIncomingProgressToken(req.Session.Context(), token)
 			stream := runtime.NewInProcessServerStream[*{{ $tool.StreamProgress.StreamChunkType }}](grpcCtx)
 			errCh := make(chan error, 1)
 			go func() {
