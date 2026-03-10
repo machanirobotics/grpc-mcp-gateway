@@ -98,6 +98,13 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
 			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
+			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
 				return nil, elicitErr
@@ -116,15 +123,15 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			}
 			token := req.Params.GetProgressToken()
 			session := req.Session
-			// notifCtx uses context.Background() so the MCP streamable transport
-			// routes progress notifications to the standalone SSE stream rather than
-			// the already-responded request stream.
-			// grpcCtx is detached from the tool-call cancellation so the gRPC server
-			// method can complete its stream after the HTTP response has been sent.
-			// WithIncomingProgressToken sets the token as incoming gRPC metadata so
-			// the server method sees it via metadata.FromIncomingContext.
+			// notifCtx is unbound so progress notifications are not tied to the
+			// tool-call request lifetime.
+			// grpcCtx inherits all values from ctx (e.g. ExtraProperties set by
+			// ExtractExtras) but detaches tool-call cancellation; it is cancelled
+			// when the MCP session closes so the gRPC goroutine does not leak.
 			notifCtx := context.Background()
-			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
+			grpcCtx, cancelGrpc := context.WithCancel(context.WithoutCancel(ctx))
+			stopSessionWatch := context.AfterFunc(req.Session.Context(), cancelGrpc)
+			grpcCtx = runtime.WithIncomingProgressToken(grpcCtx, token)
 			stream := runtime.NewInProcessServerStream[*{{ $tool.StreamProgress.StreamChunkType }}](grpcCtx)
 			errCh := make(chan error, 1)
 			go func() {
@@ -132,6 +139,8 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 				errCh <- srv.{{ $methName }}(&pbReq, stream)
 			}()
 			go func() {
+				defer stopSessionWatch()
+				defer cancelGrpc()
 				for {
 					chunk, ok := stream.Recv()
 					if !ok {
@@ -169,6 +178,13 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
+			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
 			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
@@ -325,6 +341,13 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 			{{- range $tool.MethodOpts.Elicitation.Fields }}
 				{Name: "{{ .Name }}", Description: "{{ escapeQuotes .Description }}", Required: {{ .Required }}, Type: "{{ .Type }}"{{- if .EnumValues }}, EnumValues: []string{ {{- range .EnumValues }}"{{ . }}", {{ end }}}{{- end }}{{- if .EnumProtoNames }}, ProtoValues: []string{ {{- range .EnumProtoNames }}"{{ . }}", {{ end }}}{{- end }}},
 			{{- end }}
+			}
+			if cfg.ElicitHook != nil {
+				var hookErr error
+				elicitFields, hookErr = cfg.ElicitHook(ctx, {{ $svcName }}_{{ $methName }}Tool.Name, elicitFields)
+				if hookErr != nil {
+					return nil, hookErr
+				}
 			}
 			elicitResult, elicitErr := runtime.RunElicitation(ctx, req.Session, "{{ $tool.MethodOpts.Elicitation.Message }}", elicitFields)
 			if elicitErr != nil {
