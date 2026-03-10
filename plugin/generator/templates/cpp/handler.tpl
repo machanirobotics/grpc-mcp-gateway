@@ -46,13 +46,8 @@ impl Clone for {{ $svcName }}McpHandler {
 
 impl ServerHandler for {{ $svcName }}McpHandler {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            capabilities: ServerCapabilities::builder()
-                .enable_tools()
-                .build(),
-            server_info: Implementation { name: "{{ $svcName }}".into(), version: "0.1.0".into(), ..Default::default() },
-            ..Default::default()
-        }
+        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+            .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
     }
 
     async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {

@@ -29,6 +29,8 @@ deps:
   - buf.build/machanirobotics/grpc-mcp-gateway
 ```
 
+**TodoService** (`proto/todo/v1/todo_service.proto`):
+
 ```protobuf
 import "mcp/protobuf/annotations.proto";
 
@@ -44,6 +46,35 @@ service TodoService {
 }
 ```
 
+**CounterService** (`proto/counter/v1/counter_service.proto`) — progress layout:
+
+```protobuf
+import "mcp/protobuf/annotations.proto";
+import "mcp/protobuf/progress.proto";
+
+service CounterService {
+  option (mcp.protobuf.service) = {
+    app: { name: "Counter App" version: "1.0.0" description: "..." }
+  };
+
+  rpc Count(CountRequest) returns (stream CountStreamChunk) {
+    option (mcp.protobuf.tool) = {
+      description: "Counts from 0 up to the given number. Sends progress updates."
+      progress: true
+    };
+  }
+}
+
+message CountStreamChunk {
+  oneof payload {
+    mcp.protobuf.MCPProgress progress = 1;
+    CountResponse result = 2;
+  }
+}
+```
+
+Clients request progress by including `progressToken` in `params._meta` when calling the tool.
+
 **TodoService** uses:
 - **`mcp.protobuf.service`** — app-level metadata
 - **`mcp.protobuf.tool`** — per-RPC tool name/description overrides
@@ -53,7 +84,7 @@ service TodoService {
 - **`mcp.protobuf.enum`** / **`mcp.protobuf.enum_value`** — enum-level and per-value descriptions
 - **`google.api.resource`** — auto-detected MCP resources from AIP resource annotations
 
-**CounterService** demonstrates progress via server-streaming with `mcp.protobuf.MCPProgress` (see [Progress](https://github.com/machanirobotics/grpc-mcp-gateway#progress-server-streaming) in the main README).
+**CounterService** uses `progress: true` on the tool option and the oneof layout above. See [Progress](https://github.com/machanirobotics/grpc-mcp-gateway#progress-server-streaming) in the main README for details.
 
 ## Code Generation
 
