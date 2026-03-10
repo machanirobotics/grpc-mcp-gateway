@@ -1,5 +1,7 @@
 package runtime
 
+import "context"
+
 // Transport represents the transport protocol for the MCP server.
 type Transport string
 
@@ -28,6 +30,10 @@ type Config struct {
 	Transport Transport
 	// Addr is the listen address for HTTP transports (default ":8080").
 	Addr string
+	// ElicitHook is called before every RunElicitation, allowing callers to
+	// modify elicitation fields at runtime (e.g. inject dynamic enum values).
+	// toolName is the MCP tool name. Returning an error aborts the tool call.
+	ElicitHook func(ctx context.Context, toolName string, fields []ElicitField) ([]ElicitField, error)
 }
 
 // ExtraProperty defines an additional property to inject into tool schemas
@@ -77,6 +83,15 @@ func WithTransport(t Transport) Option {
 func WithAddr(addr string) Option {
 	return func(c *Config) {
 		c.Addr = addr
+	}
+}
+
+// WithElicitHook returns an Option that sets a hook called before every
+// RunElicitation. The hook receives the tool name and current fields, and
+// returns the (possibly modified) fields. Use it to inject dynamic enum values.
+func WithElicitHook(hook func(ctx context.Context, toolName string, fields []ElicitField) ([]ElicitField, error)) Option {
+	return func(c *Config) {
+		c.ElicitHook = hook
 	}
 }
 
