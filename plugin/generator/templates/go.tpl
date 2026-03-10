@@ -136,8 +136,6 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 				errCh <- srv.{{ $methName }}(&pbReq, stream)
 			}()
 			go func() {
-				defer stopSessionWatch()
-				defer cancelGrpc()
 				for {
 					chunk, ok := stream.Recv()
 					if !ok {
