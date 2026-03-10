@@ -6,6 +6,7 @@
 
 use std::sync::Arc;
 use async_trait::async_trait;
+#[allow(unused_imports)]
 use tokio_stream::StreamExt;
 use rmcp::{ErrorData as McpError, RoleServer, ServerHandler, ServiceExt, model::*, service::RequestContext};
 use serde_json::{self, json, Value};
@@ -113,8 +114,8 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
 
 impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            capabilities: ServerCapabilities::builder()
+        ServerInfo::new(
+            ServerCapabilities::builder()
                 .enable_tools()
 {{- if $hasPrompts }}
                 .enable_prompts()
@@ -123,9 +124,8 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
                 .enable_resources()
 {{- end }}
                 .build(),
-            server_info: Implementation { name: "{{ $svcName }}".into(), version: "0.1.0".into(), ..Default::default() },
-            ..Default::default()
-        }
+        )
+        .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
     }
 
     async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
@@ -186,13 +186,12 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
                     .map(|a| a.iter().map(|(k, v)| format!("{k}={v}")).collect::<Vec<_>>().join(", "))
                     .unwrap_or_default();
                 let desc = p.description.clone().unwrap_or_default();
-                return Ok(GetPromptResult {
-                    description: p.description,
-                    messages: vec![PromptMessage {
-                        role: PromptMessageRole::User,
-                        content: PromptMessageContent::text(format!("{desc} ({arg_str})")),
-                    }],
-                });
+                let messages = vec![PromptMessage::new_text(PromptMessageRole::User, format!("{desc} ({arg_str})"))];
+                let mut result = GetPromptResult::new(messages);
+                if let Some(ref d) = p.description {
+                    result = result.with_description(d.clone());
+                }
+                return Ok(result);
             }
         }
         Err(McpError::invalid_params(format!("unknown prompt: {}", request.name), None))
@@ -209,9 +208,7 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
     }
 
     async fn read_resource(&self, request: ReadResourceRequestParams, _: RequestContext<RoleServer>) -> Result<ReadResourceResult, McpError> {
-        Ok(ReadResourceResult {
-            contents: vec![ResourceContents::text("{}", request.uri)],
-        })
+        Ok(ReadResourceResult::new(vec![ResourceContents::text("{}", request.uri)]))
     }
 {{- end }}
 }
@@ -266,11 +263,8 @@ where
 
 impl<C: {{ $svcName }}McpForwardClient> ServerHandler for {{ $svcName }}McpForwardHandler<C> {
     fn get_info(&self) -> ServerInfo {
-        ServerInfo {
-            capabilities: ServerCapabilities::builder().enable_tools().build(),
-            server_info: Implementation { name: "{{ $svcName }}".into(), version: "0.1.0".into(), ..Default::default() },
-            ..Default::default()
-        }
+        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
+            .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
     }
 
     async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
