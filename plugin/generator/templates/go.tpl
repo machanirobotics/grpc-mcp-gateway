@@ -125,13 +125,10 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 			session := req.Session
 			// notifCtx is unbound so progress notifications are not tied to the
 			// tool-call request lifetime.
-			// grpcCtx inherits all values from ctx (e.g. ExtraProperties set by
-			// ExtractExtras) but detaches tool-call cancellation; it is cancelled
-			// when the MCP session closes so the gRPC goroutine does not leak.
+			// grpcCtx detaches from the tool-call cancellation so the gRPC
+			// server method can complete its stream after the HTTP response is sent.
 			notifCtx := context.Background()
-			grpcCtx, cancelGrpc := context.WithCancel(context.WithoutCancel(ctx))
-			stopSessionWatch := context.AfterFunc(req.Session.Context(), cancelGrpc)
-			grpcCtx = runtime.WithIncomingProgressToken(grpcCtx, token)
+			grpcCtx := runtime.WithIncomingProgressToken(context.WithoutCancel(ctx), token)
 			stream := runtime.NewInProcessServerStream[*{{ $tool.StreamProgress.StreamChunkType }}](grpcCtx)
 			errCh := make(chan error, 1)
 			go func() {
