@@ -11,3 +11,14 @@ plugins:
   # --- Rust (pre-compiled, published as mcp-protobuf crate) ---
   - remote: buf.build/community/neoeinstein-prost
     out: ../mcp/protobuf/rust/src/gen
+  # --- Typescript (pre-compiled, published as @grpc-mcp-gateway/protobuf on npm) ---
+  # --- Server: gRPC-Web client stubs ---
+  - remote: buf.build/grpc/web:v2.0.2
+    out: ../mcp/protobuf/typescript/src/gen
+    opt:
+      - import_style=typescript
+      - mode=grpcwebtext
+
+  # --- TypeScript definitions for Protobuf messages ---
+  - remote: buf.build/community/timostamm-protobuf-ts:v2.11.1
+    out: ../mcp/protobuf/typescript/src/gen
