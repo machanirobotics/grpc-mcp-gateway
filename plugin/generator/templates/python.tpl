@@ -28,13 +28,35 @@ from google.protobuf.json_format import MessageToDict, ParseDict
 )
 {{ end }}
 
+def _app_resource_uri(service_name: str) -> str:
+    return f"ui://{service_name.lower()}/app.html"
+
+def _default_app_html(app_name: str, version: str, description: str) -> str:
+    return (
+        "<!DOCTYPE html><html lang='en'><head><meta charset='utf-8'>"
+        f"<title>{app_name}</title>"
+        "<style>body{font-family:system-ui,sans-serif;max-width:600px;margin:40px auto;padding:0 20px;color:#333}"
+        "h1{font-size:1.5rem}p{color:#666}.version{font-size:.85rem;color:#999}</style>"
+        "</head><body>"
+        f"<h1>{app_name}</h1><p class='version'>v{version}</p><p>{description}</p>"
+        "<p>This is a generated MCP App placeholder. Replace this resource with your own UI.</p>"
+        "</body></html>"
+    )
+
+def _tool_with_app_meta(tool: types.Tool, app_resource_uri: str) -> types.Tool:
+    meta = {"ui": {"resourceUri": app_resource_uri}}
+    if hasattr(tool, "model_copy"):
+        return tool.model_copy(update={"meta": meta})
+    return tool.copy(deep=True, update={"meta": meta})
+
 {{- range $svcName, $methods := .Services }}
 
 class {{ $svcName }}MCPServer(Protocol):
-    """Protocol that users implement to handle MCP tool calls backed by {{ $svcName }} RPCs.
-    Server-streaming RPCs (with progress) are only supported via forward_to_{{ $svcName | snakeCase }}_mcp_client."""
+    """Protocol that users implement to handle MCP tool calls backed by {{ $svcName }} RPCs."""
 {{- range $methName, $tool := $methods }}
-{{- if not $tool.StreamProgress }}
+{{- if $tool.StreamProgress }}
+    def {{ $tool.PyMethodName }}(self, request: {{ $tool.PyRequestType }}) -> Iterator[{{ $tool.PyStreamChunkType }}]: ...
+{{- else }}
     async def {{ $tool.PyMethodName }}(self, request: {{ $tool.PyRequestType }}) -> {{ $tool.PyResponseType }}: ...
 {{- end }}
 {{- end }}
@@ -53,23 +75,13 @@ class {{ $svcName }}MCPClient(Protocol):
 {{- range $svcName, $methods := .Services }}
 
 {{ $svcName }}_MCP_DEFAULT_BASE_PATH = "{{ index $.ServiceBasePaths $svcName }}"
-{{- end }}
 
-_ALL_TOOLS: list[types.Tool] = [
-{{- range $key, $val := .SchemaJSON }}
-    {{ $key }}_TOOL,
+{{ $svcName }}_TOOLS: list[types.Tool] = [
+{{- range $methName, $tool := $methods }}
+    {{ $svcName }}_{{ $methName }}_TOOL,
 {{- end }}
 ]
-
-_STREAMING_TOOL_NAMES: frozenset[str] = frozenset({
-{{- range $svcName, $methods := .Services }}
-{{- range $methName, $tool := $methods }}
-{{- if $tool.StreamProgress }}
-    "{{ $tool.ToolName }}",
 {{- end }}
-{{- end }}
-{{- end }}
-})
 
 {{- range $svcName, $methods := .Services }}
 {{- $svcOpts := index $.ServiceOpts $svcName }}
@@ -105,6 +117,9 @@ def _{{ $svcName | snakeCase }}_resources() -> list[types.Resource | types.Resou
 {{- end }}
 {{- end }}
 {{- end }}
+{{- if and $svcOpts $svcOpts.App }}
+        types.Resource(uri=_app_resource_uri("{{ $svcName }}"), name="{{ escapeQuotes $svcOpts.App.Name }}", mimeType="text/html"),
+{{- end }}
     ]
 
 def _{{ $svcName | snakeCase }}_completion_map() -> dict[str, list[str]]:
@@ -124,15 +139,21 @@ def _{{ $svcName | snakeCase }}_completion_map() -> dict[str, list[str]]:
 
 def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $svcName }}MCPServer) -> None:
     """Register all {{ $svcName }} tools, prompts, and resources on the given MCP server."""
+{{- if and $svcOpts $svcOpts.App }}
+    _app_resource_uri_value = _app_resource_uri("{{ $svcName }}")
+{{- end }}
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
-        return [t for t in _ALL_TOOLS if t.name not in _STREAMING_TOOL_NAMES]
+{{- if and $svcOpts $svcOpts.App }}
+        return [_tool_with_app_meta(t, _app_resource_uri_value) for t in {{ $svcName }}_TOOLS]
+{{- else }}
+        return {{ $svcName }}_TOOLS
+{{- end }}
 
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
 {{- range $methName, $tool := $methods }}
-{{- if not $tool.StreamProgress }}
         if name == "{{ $tool.ToolName }}":
 {{- if and $tool.MethodOpts $tool.MethodOpts.Elicitation }}
             try:
@@ -154,6 +175,31 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
                 pass  # Client does not support elicitation; proceed with tool call.
 {{- end }}
             req = ParseDict(arguments, {{ $tool.PyRequestType }}())
+{{- if $tool.StreamProgress }}
+            _progress_token = None
+            try:
+                _params = server.request_context.request.params
+                if _params.meta is not None:
+                    _progress_token = _params.meta.progressToken
+            except Exception:
+                pass
+            stream = impl.{{ $tool.PyMethodName }}(req)
+            session = server.request_context.session
+            for chunk in stream:
+                if chunk.HasField("{{ $tool.StreamProgress.ProgressField | snakeCase }}"):
+                    _p = chunk.{{ $tool.StreamProgress.ProgressField | snakeCase }}
+                    if _progress_token is not None:
+                        await session.send_progress_notification(
+                            _progress_token,
+                            progress=_p.progress,
+                            total=_p.total if _p.HasField("total") else None,
+                            message=_p.message or None,
+                        )
+                elif chunk.HasField("{{ $tool.StreamProgress.ResultField | snakeCase }}"):
+                    resp = chunk.{{ $tool.StreamProgress.ResultField | snakeCase }}
+                    return [types.TextContent(type="text", text=json.dumps(MessageToDict(resp, preserving_proto_field_name=True, always_print_fields_with_no_presence=True)))]
+            raise ValueError("Stream ended without result")
+{{- else }}
             resp = await impl.{{ $tool.PyMethodName }}(req)
             return [types.TextContent(type="text", text=json.dumps(MessageToDict(resp, preserving_proto_field_name=True, always_print_fields_with_no_presence=True)))]
 {{- end }}
@@ -183,9 +229,33 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
         async def handle_list_resources() -> list[types.Resource]:
             return [r for r in _resources if isinstance(r, types.Resource)]
 
+        @server.list_resource_templates()
+        async def handle_list_resource_templates() -> list[types.ResourceTemplate]:
+            return [r for r in _resources if isinstance(r, types.ResourceTemplate)]
+
         @server.read_resource()
         async def handle_read_resource(uri: str) -> str:
+{{- if and $svcOpts $svcOpts.App }}
+            if uri == _app_resource_uri_value:
+                return _default_app_html("{{ escapeQuotes $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ escapeQuotes $svcOpts.App.Description }}")
+{{- end }}
             return "{}"
+
+    _completion_map = _{{ $svcName | snakeCase }}_completion_map()
+    if _completion_map:
+        @server.completion()
+        async def handle_completion(
+            ref: types.PromptReference | types.ResourceTemplateReference,
+            argument: types.CompletionArgument,
+            context: types.CompletionContext | None,
+        ) -> types.Completion | None:
+            if getattr(ref, "type", None) != "ref/prompt":
+                return types.Completion(values=[], total=0, hasMore=False)
+            key = f"{ref.name}:{argument.name}"
+            values = _completion_map.get(key, [])
+            prefix = (argument.value or "").lower()
+            filtered = [v for v in values if v.lower().startswith(prefix)]
+            return types.Completion(values=filtered, total=len(filtered), hasMore=False)
 {{- end }}
 
 {{- range $svcName, $methods := .Services }}
@@ -247,11 +317,19 @@ def serve_{{ $svcName | snakeCase }}_mcp(
 {{- range $svcName, $methods := .Services }}
 
 def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ $svcName }}MCPClient) -> None:
-    """Register all {{ $svcName }} tools on the MCP server, forwarding each call to a remote gRPC server."""
+    """Register all {{ $svcName }} tools, prompts, and resources on the MCP server, forwarding each call to a remote gRPC server."""
+{{- $svcOpts := index $.ServiceOpts $svcName }}
+{{- if and $svcOpts $svcOpts.App }}
+    _app_resource_uri_value = _app_resource_uri("{{ $svcName }}")
+{{- end }}
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
-        return _ALL_TOOLS
+{{- if and $svcOpts $svcOpts.App }}
+        return [_tool_with_app_meta(t, _app_resource_uri_value) for t in {{ $svcName }}_TOOLS]
+{{- else }}
+        return {{ $svcName }}_TOOLS
+{{- end }}
 
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
@@ -307,4 +385,55 @@ def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ 
 {{- end }}
 {{- end }}
         raise ValueError(f"Unknown tool: {name}")
+
+    _prompts = _{{ $svcName | snakeCase }}_prompts()
+    if _prompts:
+        @server.list_prompts()
+        async def handle_list_prompts() -> list[types.Prompt]:
+            return _prompts
+
+        @server.get_prompt()
+        async def handle_get_prompt(name: str, arguments: dict[str, str] | None) -> types.GetPromptResult:
+            for p in _prompts:
+                if p.name == name:
+                    arg_str = ", ".join(f"{k}={v}" for k, v in (arguments or {}).items())
+                    return types.GetPromptResult(
+                        description=p.description,
+                        messages=[types.PromptMessage(role="user", content=types.TextContent(type="text", text=f"{p.description} ({arg_str})"))],
+                    )
+            raise ValueError(f"Unknown prompt: {name}")
+
+    _resources = _{{ $svcName | snakeCase }}_resources()
+    if _resources:
+        @server.list_resources()
+        async def handle_list_resources() -> list[types.Resource]:
+            return [r for r in _resources if isinstance(r, types.Resource)]
+
+        @server.list_resource_templates()
+        async def handle_list_resource_templates() -> list[types.ResourceTemplate]:
+            return [r for r in _resources if isinstance(r, types.ResourceTemplate)]
+
+        @server.read_resource()
+        async def handle_read_resource(uri: str) -> str:
+{{- if and $svcOpts $svcOpts.App }}
+            if uri == _app_resource_uri_value:
+                return _default_app_html("{{ escapeQuotes $svcOpts.App.Name }}", "{{ $svcOpts.App.Version }}", "{{ escapeQuotes $svcOpts.App.Description }}")
+{{- end }}
+            return "{}"
+
+    _completion_map = _{{ $svcName | snakeCase }}_completion_map()
+    if _completion_map:
+        @server.completion()
+        async def handle_completion(
+            ref: types.PromptReference | types.ResourceTemplateReference,
+            argument: types.CompletionArgument,
+            context: types.CompletionContext | None,
+        ) -> types.Completion | None:
+            if getattr(ref, "type", None) != "ref/prompt":
+                return types.Completion(values=[], total=0, hasMore=False)
+            key = f"{ref.name}:{argument.name}"
+            values = _completion_map.get(key, [])
+            prefix = (argument.value or "").lower()
+            filtered = [v for v in values if v.lower().startswith(prefix)]
+            return types.Completion(values=filtered, total=len(filtered), hasMore=False)
 {{- end }}

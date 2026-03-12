@@ -3,6 +3,7 @@ package generator
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strings"
 	"text/template"
 
@@ -60,6 +61,7 @@ func (g *PythonFileGenerator) Generate() {
 	funcMap := template.FuncMap{
 		"snakeCase":    toSnakeCase,
 		"pyString":     pyStringLiteral,
+		"lower":        strings.ToLower,
 		"escapeQuotes": func(s string) string { return strings.ReplaceAll(s, `"`, `\"`) },
 	}
 
@@ -187,6 +189,7 @@ func (g *PythonFileGenerator) buildPyParams() PyTplParams {
 	for mod := range pbImports {
 		importLines = append(importLines, fmt.Sprintf("import %s", mod))
 	}
+	sort.Strings(importLines)
 
 	// Add PyDescription to ToolMeta (Python-safe string literal).
 	for key, meta := range toolMeta {

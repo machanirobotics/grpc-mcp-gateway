@@ -6,8 +6,6 @@
 
 use std::sync::Arc;
 use async_trait::async_trait;
-#[allow(unused_imports)]
-use tokio_stream::StreamExt;
 use rmcp::{ErrorData as McpError, RoleServer, ServerHandler, ServiceExt, model::*, service::RequestContext};
 use serde_json::{self, json, Value};
 
@@ -17,8 +15,27 @@ fn make_tool(name: &str, description: &str, schema_json: &str) -> Tool {
         "inputSchema": serde_json::from_str::<Value>(schema_json).unwrap(),
     })).expect("generated tool schema must be valid")
 }
+
+fn make_tool_with_app_meta(name: &str, description: &str, schema_json: &str, app_resource_uri: &str) -> Tool {
+    serde_json::from_value(json!({
+        "name": name, "description": description,
+        "inputSchema": serde_json::from_str::<Value>(schema_json).unwrap(),
+        "_meta": { "ui": { "resourceUri": app_resource_uri } }
+    })).expect("generated tool schema must be valid")
+}
+
+fn app_resource_uri(service_name: &str) -> String {
+    format!("ui://{}/app.html", service_name.to_lowercase())
+}
+
+fn default_app_html(app_name: &str, version: &str, description: &str) -> String {
+    format!("<!DOCTYPE html><html lang=\"en\"><head><meta charset=\"utf-8\"><title>{app_name}</title></head><body><h1>{app_name}</h1><p>v{version}</p><p>{description}</p><p>This is a generated MCP App placeholder. Replace this resource with your own UI.</p></body></html>")
+}
 {{ range $svcName, $methods := .Services }}
 {{- $svcOpts := index $.ServiceOpts $svcName }}
+{{- $hasResources := false }}
+{{- if and $svcOpts $svcOpts.Resources }}{{ $hasResources = true }}{{ end }}
+{{- if and $svcOpts $svcOpts.App }}{{ $hasResources = true }}{{ end }}
 {{- range $methName, $info := $methods }}
 const {{ $info.ConstName }}_SCHEMA_JSON: &str = r##"{{ index $.SchemaJSON (printf "%s_%s" $svcName $methName) }}"##;
 {{- end }}
@@ -42,25 +59,45 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
     pub fn new(svc: T) -> Self { Self { inner: Arc::new(svc) } }
 
     fn tools() -> Vec<Tool> {
+{{- if and $svcOpts $svcOpts.App }}
+        let app_uri = app_resource_uri("{{ $svcName }}");
+{{- end }}
         vec![
         {{- range $methName, $info := $methods }}
         {{- if not $info.StreamProgress }}
+{{- if and $svcOpts $svcOpts.App }}
+            make_tool_with_app_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, &app_uri),
+{{- else }}
             make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),
+{{- end }}
         {{- end }}
         {{- end }}
         ]
     }
 
     fn all_tools() -> Vec<Tool> {
+{{- if and $svcOpts $svcOpts.App }}
+        let app_uri = app_resource_uri("{{ $svcName }}");
+{{- end }}
         vec![
         {{- range $methName, $info := $methods }}
+{{- if and $svcOpts $svcOpts.App }}
+            make_tool_with_app_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, &app_uri),
+{{- else }}
             make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),
+{{- end }}
         {{- end }}
         ]
     }
 {{- $hasPrompts := false }}
+{{- $hasPromptCompletions := false }}
 {{- range $methName, $info := $methods }}
 {{- if and $info.MethodOpts $info.MethodOpts.Prompt }}{{ $hasPrompts = true }}{{ end }}
+{{- if and $info.MethodOpts $info.MethodOpts.Prompt }}
+{{- range $info.MethodOpts.Prompt.Arguments }}
+{{- if .EnumValues }}{{ $hasPromptCompletions = true }}{{ end }}
+{{- end }}
+{{- end }}
 {{- end }}
 {{- if $hasPrompts }}
 
@@ -82,7 +119,27 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
         ]
     }
 {{- end }}
-{{- if and $svcOpts $svcOpts.Resources }}
+{{- if $hasPromptCompletions }}
+
+    fn completion_map() -> std::collections::HashMap<String, Vec<String>> {
+        let mut m: std::collections::HashMap<String, Vec<String>> = std::collections::HashMap::new();
+{{- range $methName, $info := $methods }}
+{{- if and $info.MethodOpts $info.MethodOpts.Prompt }}
+{{- $pName := $info.MethodOpts.Prompt.Name }}
+{{- range $info.MethodOpts.Prompt.Arguments }}
+{{- if .EnumValues }}
+        m.insert(
+            "{{ $pName }}:{{ .Name }}".to_string(),
+            vec![{{- range .EnumValues }}"{{ . }}".to_string(), {{- end }}],
+        );
+{{- end }}
+{{- end }}
+{{- end }}
+{{- end }}
+        m
+    }
+{{- end }}
+{{- if $hasResources }}
 
     fn resources() -> Vec<Resource> {
         vec![
@@ -93,6 +150,13 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
                 "description": "{{ .Description | rsEscape }}", "mimeType": "{{ .MimeType }}"
             })).expect("generated resource must be valid"),
         {{- end }}
+        {{- end }}
+        {{- if and $svcOpts $svcOpts.App }}
+            serde_json::from_value(json!({
+                "uri": app_resource_uri("{{ $svcName }}"),
+                "name": "{{ $svcOpts.App.Name }}",
+                "mimeType": "text/html"
+            })).expect("generated app resource must be valid"),
         {{- end }}
         ]
     }
@@ -120,7 +184,10 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
 {{- if $hasPrompts }}
                 .enable_prompts()
 {{- end }}
-{{- if and $svcOpts $svcOpts.Resources }}
+{{- if $hasPromptCompletions }}
+                .enable_completions()
+{{- end }}
+{{- if $hasResources }}
                 .enable_resources()
 {{- end }}
                 .build(),
@@ -197,7 +264,29 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
         Err(McpError::invalid_params(format!("unknown prompt: {}", request.name), None))
     }
 {{- end }}
-{{- if and $svcOpts $svcOpts.Resources }}
+{{- if $hasPromptCompletions }}
+
+    async fn complete(&self, request: CompleteRequestParams, _: RequestContext<RoleServer>) -> Result<CompleteResult, McpError> {
+        let key = match request.r#ref {
+            Reference::Prompt(prompt_ref) => format!("{}:{}", prompt_ref.name, request.argument.name),
+            _ => {
+                let completion = CompletionInfo::with_all_values(Vec::new())
+                    .map_err(|e| McpError::internal_error(format!("completion error: {e}"), None))?;
+                return Ok(CompleteResult::new(completion));
+            }
+        };
+        let values = Self::completion_map().get(&key).cloned().unwrap_or_default();
+        let prefix = request.argument.value.to_lowercase();
+        let filtered: Vec<String> = values
+            .into_iter()
+            .filter(|v| v.to_lowercase().starts_with(&prefix))
+            .collect();
+        let completion = CompletionInfo::with_all_values(filtered)
+            .map_err(|e| McpError::internal_error(format!("completion error: {e}"), None))?;
+        Ok(CompleteResult::new(completion))
+    }
+{{- end }}
+{{- if $hasResources }}
 
     async fn list_resources(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListResourcesResult, McpError> {
         Ok(ListResourcesResult::with_all_items(Self::resources()))
@@ -208,128 +297,21 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
     }
 
     async fn read_resource(&self, request: ReadResourceRequestParams, _: RequestContext<RoleServer>) -> Result<ReadResourceResult, McpError> {
+{{- if and $svcOpts $svcOpts.App }}
+        let app_uri = app_resource_uri("{{ $svcName }}");
+        if request.uri == app_uri {
+            let html = default_app_html("{{ $svcOpts.App.Name | rsEscape }}", "{{ $svcOpts.App.Version }}", "{{ $svcOpts.App.Description | rsEscape }}");
+            return Ok(ReadResourceResult::new(vec![
+                ResourceContents::text(html, request.uri).with_mime_type("text/html")
+            ]));
+        }
+{{- end }}
         Ok(ReadResourceResult::new(vec![ResourceContents::text("{}", request.uri)]))
     }
 {{- end }}
 }
 
 pub const {{ $svcName | screamingSnakeCase }}_MCP_DEFAULT_BASE_PATH: &str = "{{ index $.ServiceBasePaths $svcName }}";
-
-{{- $hasStreaming := false }}
-{{- range $methName, $info := $methods }}
-{{- if $info.StreamProgress }}{{ $hasStreaming = true }}{{ end }}
-{{- end }}
-{{- if $hasStreaming }}
-
-struct {{ $svcName }}McpEmpty;
-#[async_trait]
-impl {{ $svcName }}McpServer for {{ $svcName }}McpEmpty {}
-
-/// Client trait for forwarding streaming RPCs. Implement for your gRPC client or use the tonic-generated client.
-#[async_trait]
-pub trait {{ $svcName }}McpForwardClient: Send + Sync + 'static {
-{{- range $methName, $info := $methods }}
-{{- if $info.StreamProgress }}
-    async fn {{ $info.RsMethodName }}(
-        &mut self,
-        req: super::{{ $info.RequestType }},
-    ) -> std::result::Result<
-        tonic::Response<tonic::codec::Streaming<super::{{ $info.StreamChunkType }}>>,
-        tonic::Status,
-    >;
-{{- end }}
-{{- end }}
-}
-
-/// Handler that forwards tool calls to a gRPC client. Use for services with streaming (progress) RPCs.
-pub struct {{ $svcName }}McpForwardHandler<C: {{ $svcName }}McpForwardClient> {
-    client: std::sync::Mutex<C>,
-}
-
-impl<C: {{ $svcName }}McpForwardClient> {{ $svcName }}McpForwardHandler<C> {
-    pub fn new(client: C) -> Self {
-        Self { client: std::sync::Mutex::new(client) }
-    }
-}
-
-impl<C: {{ $svcName }}McpForwardClient> Clone for {{ $svcName }}McpForwardHandler<C>
-where
-    C: Clone,
-{
-    fn clone(&self) -> Self {
-        Self { client: std::sync::Mutex::new(self.client.lock().unwrap().clone()) }
-    }
-}
-
-impl<C: {{ $svcName }}McpForwardClient> ServerHandler for {{ $svcName }}McpForwardHandler<C> {
-    fn get_info(&self) -> ServerInfo {
-        ServerInfo::new(ServerCapabilities::builder().enable_tools().build())
-            .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
-    }
-
-    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
-        Ok(ListToolsResult::with_all_items({{ $svcName }}McpHandler::<{{ $svcName }}McpEmpty>::all_tools()))
-    }
-
-    async fn call_tool(&self, request: CallToolRequestParams, _context: RequestContext<RoleServer>) -> Result<CallToolResult, McpError> {
-        let args = request.arguments.map_or_else(|| Value::Object(Default::default()), Value::Object);
-        match request.name.as_ref() {
-        {{- range $methName, $info := $methods }}
-        {{- if $info.StreamProgress }}
-            "{{ $info.ToolName }}" => {
-                let req: super::{{ $info.RequestType }} = serde_json::from_value(args)
-                    .map_err(|e| McpError::internal_error(format!("parse request: {e}"), None))?;
-                let mut guard = self.client.lock().map_err(|_| McpError::internal_error("client lock poisoned", None))?;
-                let mut stream = guard.{{ $info.RsMethodName }}(req).await
-                    .map_err(|e| McpError::internal_error(format!("gRPC error: {e}"), None))?;
-                drop(guard);
-                let mut result = None;
-                while let Some(chunk) = stream.next().await {
-                    let chunk = chunk.map_err(|e| McpError::internal_error(format!("stream error: {e}"), None))?;
-                    match chunk.payload {
-                        Some(super::{{ $info.StreamChunkType | snakeCase }}::Payload::Progress(_)) => {}
-                        Some(super::{{ $info.StreamChunkType | snakeCase }}::Payload::Result(r)) => {
-                            result = Some(r);
-                            break;
-                        }
-                        _ => {}
-                    }
-                }
-                let resp = result.ok_or_else(|| McpError::internal_error("stream ended without result", None))?;
-                let text = serde_json::to_string(&resp)
-                    .map_err(|e| McpError::internal_error(format!("serialize: {e}"), None))?;
-                Ok(CallToolResult::success(vec![Content::text(text)]))
-            }
-        {{- end }}
-        {{- end }}
-            _ => Err(McpError::internal_error(format!("unknown tool: {}", request.name), None)),
-        }
-    }
-}
-
-/// Implement {{ $svcName }}McpForwardClient for the tonic-generated client.
-#[async_trait]
-impl<T> {{ $svcName }}McpForwardClient for super::{{ $svcName | snakeCase }}_client::{{ $svcName }}Client<T>
-where
-    T: tonic::client::GrpcService<tonic::body::Body> + Send + Sync + 'static,
-    T::ResponseBody: tonic::body::Body + Send + 'static,
-    T::Error: Into<std::boxed::Box<dyn std::error::Error + Send + Sync>>,
-{
-{{- range $methName, $info := $methods }}
-{{- if $info.StreamProgress }}
-    async fn {{ $info.RsMethodName }}(
-        &mut self,
-        req: super::{{ $info.RequestType }},
-    ) -> std::result::Result<
-        tonic::Response<tonic::codec::Streaming<super::{{ $info.StreamChunkType }}>>,
-        tonic::Status,
-    > {
-        self.{{ $info.RsMethodName }}(req).await
-    }
-{{- end }}
-{{- end }}
-}
-{{- end }}
 
 pub struct {{ $svcName }}McpTransportConfig {
     pub transport: String,
