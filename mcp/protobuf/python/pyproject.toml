@@ -26,4 +26,4 @@ Repository = "https://github.com/machanirobotics/grpc-mcp-gateway"
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["mcp*"]
+include = ["mcp*", "google*"]
