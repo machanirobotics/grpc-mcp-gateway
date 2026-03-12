@@ -17,8 +17,7 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 dependencies = [
-    "protobuf>=5.29.0",
-    "googleapis-common-protos>=1.66.0",
+    "protobuf>=7.34.0",
 ]
 
 [project.urls]
