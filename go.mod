@@ -7,7 +7,7 @@ require (
 	github.com/google/jsonschema-go v0.4.2
 	github.com/modelcontextprotocol/go-sdk v1.4.1
 	google.golang.org/genproto/googleapis/api v0.0.0-20260217215200-42d3e9bedb6d
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 )
 
