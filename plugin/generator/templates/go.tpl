@@ -27,14 +27,14 @@ import (
 
 // JSON schemas for each RPC method, used as the inputSchema for MCP tools.
 {{- range $key, $val := .SchemaJSON }}
-var {{ $key }}SchemaJSON = {{ backtick }}{{ $val }}{{ backtick }}
+var {{ $key }}SchemaJSON = {{ safeRawString $val }}
 {{- end }}
 
 // MCP tool descriptors. Each pairs a schema with a tool name and description
 // so that LLM clients can discover and invoke the underlying RPCs.
 var (
 {{- range $key, $val := .SchemaJSON }}
-	{{ $key }}Tool = runtime.MustCreateTool("{{ (index $.ToolMeta $key).Name }}", {{ backtick }}{{ (index $.ToolMeta $key).Description }}{{ backtick }}, {{ $key }}SchemaJSON)
+	{{ $key }}Tool = runtime.MustCreateTool("{{ (index $.ToolMeta $key).Name }}", {{ safeRawString (index $.ToolMeta $key).Description }}, {{ $key }}SchemaJSON)
 {{- end }}
 )
 
