@@ -346,10 +346,7 @@ pub async fn serve_{{ $svcName | snakeCase }}_mcp<T: {{ $svcName }}McpServer>(
             StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,
         };
         let h = handler.clone();
-        let http_config = StreamableHttpServerConfig {
-            sse_retry: None,
-            ..StreamableHttpServerConfig::default()
-        };
+        let http_config = StreamableHttpServerConfig::default().with_sse_retry(None);
         let http_service = StreamableHttpService::new(
             move || Ok(h.clone()), Arc::new(LocalSessionManager::default()),
             http_config,

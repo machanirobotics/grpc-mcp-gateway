@@ -5,7 +5,8 @@
 [package]
 name = "{{ .CrateName }}"
 version = "0.1.0"
-edition = "2021"
+edition = "2024"
+rust-version = "1.93.0"
 
 [lib]
 name = "{{ .CrateName }}"

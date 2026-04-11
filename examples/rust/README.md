@@ -4,7 +4,7 @@ TodoService MCP server examples in Rust, demonstrating all supported transports.
 
 ## Prerequisites
 
-- Rust 1.75+ (stable)
+- Rust 1.93.0+ (stable; edition 2024)
 - Generated code already in `proto/generated/rust/` (run `buf generate` from `examples/`)
 
 The generated code includes both **TodoService** (`todo/v1/`) and **CounterService** (`counter/v1/`); the Rust examples use TodoService.
