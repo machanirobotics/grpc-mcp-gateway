@@ -11,7 +11,7 @@ dependencies = [
 ]
 
 [package.metadata]
-requires-dist = [{ name = "protobuf", specifier = ">=7.34.0" }]
+requires-dist = [{ name = "protobuf", specifier = ">=7.34.1" }]
 
 [[package]]
 name = "protobuf"

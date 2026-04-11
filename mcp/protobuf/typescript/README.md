@@ -45,7 +45,7 @@ This refreshes `lib/` (protobuf-ts). This package does **not** ship gRPC-Web cli
 ## Development
 
 ```bash
-bun install   # or npm install
+bun install --frozen-lockfile
 bun run check # TypeScript --noEmit
 bun run lint  # Biome (does not lint buf-generated `lib/` — regenerate with `buf generate` instead of editing)
 ```

@@ -229,25 +229,29 @@ jobs:
     steps:
       - uses: actions/checkout@v6
 
-      # Trusted publishing (OIDC): no NODE_AUTH_TOKEN. Requires npm CLI ≥ 11.5.1 (Node 24+ on runners).
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
       - name: Stamp version from tag
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
           sed -i 's/"version": "[^"]*"/"version": "'"$VERSION"'"/' mcp/protobuf/typescript/package.json
 
-      - name: Verify and publish
+      - uses: oven-sh/setup-bun@v2
+
+      - name: Install & verify (Bun)
         working-directory: mcp/protobuf/typescript
         run: |
-          npm --version
-          npm ci
-          npm run check
-          npm run lint
-          npm publish --access public
+          bun install --frozen-lockfile
+          bun run check
+          bun run lint
+
+      # Trusted publishing (OIDC): Bun does not support npm OIDC yet; npm publish only here. Node 24+ / npm 11.5.1+.
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to npm (npm CLI for OIDC)
+        working-directory: mcp/protobuf/typescript
+        run: npm publish --access public
 
   update-docs:
     name: Sync protobuf package versions & docs
@@ -266,9 +270,7 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
 
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
+      - uses: oven-sh/setup-bun@v2
 
       - name: Bump package versions and README pins
         run: |
@@ -300,7 +302,7 @@ jobs:
           (cd mcp/protobuf/python && uv lock)
           # Refresh only lock metadata for the bumped crate version (avoid full resolve churn from generate-lockfile)
           (cd mcp/protobuf/rust && cargo check)
-          (cd mcp/protobuf/typescript && npm install --package-lock-only)
+          (cd mcp/protobuf/typescript && bun install)
 
       - name: Commit and push
         run: |
@@ -315,7 +317,7 @@ jobs:
             mcp/protobuf/rust/Cargo.lock \
             mcp/protobuf/rust/README.md \
             mcp/protobuf/typescript/package.json \
-            mcp/protobuf/typescript/package-lock.json \
+            mcp/protobuf/typescript/bun.lock \
             mcp/protobuf/typescript/README.md
           if git diff --staged --quiet; then
             echo "No version or doc changes needed"

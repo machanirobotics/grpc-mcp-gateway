@@ -122,12 +122,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "22"
-      - name: TypeScript check
+      - uses: oven-sh/setup-bun@v2
+      - name: Install, tsc, Biome (mcp/protobuf/typescript; Bun only)
         working-directory: mcp/protobuf/typescript
         run: |
-          npm install
-          npm run check
-          npm run lint
+          bun install --frozen-lockfile
+          bun run check
+          bun run lint
