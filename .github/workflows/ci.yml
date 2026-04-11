@@ -116,3 +116,18 @@ jobs:
       - name: Cargo check
         working-directory: mcp/protobuf/rust
         run: cargo check
+
+  proto-typescript:
+    name: Check proto lib (TypeScript)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+      - name: TypeScript check
+        working-directory: mcp/protobuf/typescript
+        run: |
+          npm install
+          npm run check
+          npm run lint
