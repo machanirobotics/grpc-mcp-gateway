@@ -12,8 +12,8 @@ npm install @machanirobotics/grpc-mcp-gateway-protos
 bun add @machanirobotics/grpc-mcp-gateway-protos
 
 # Or pin to the same release as the gateway (recommended)
-npm install @machanirobotics/grpc-mcp-gateway-protos@1.0.0
-bun add @machanirobotics/grpc-mcp-gateway-protos@1.0.0
+npm install @machanirobotics/grpc-mcp-gateway-protos@1.5.3
+bun add @machanirobotics/grpc-mcp-gateway-protos@1.5.3
 ```
 
 Use the version that matches the gateway / code generator release you rely on.

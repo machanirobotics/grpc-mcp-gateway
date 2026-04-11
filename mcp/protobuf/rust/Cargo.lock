@@ -31,7 +31,7 @@ dependencies = [
 
 [[package]]
 name = "mcp-protobuf"
-version = "0.1.0"
+version = "1.5.3"
 dependencies = [
  "prost",
  "prost-types",

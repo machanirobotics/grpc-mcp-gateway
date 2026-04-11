@@ -4,7 +4,7 @@ requires-python = ">=3.10"
 
 [[package]]
 name = "grpc-mcp-gateway-protos"
-version = "0.1.0"
+version = "1.5.3"
 source = { editable = "." }
 dependencies = [
     { name = "protobuf" },

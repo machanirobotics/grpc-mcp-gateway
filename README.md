@@ -91,9 +91,9 @@ The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled librar
 | Language   | Package                                                                        | Install                                                                 |
 | ---------- | ------------------------------------------------------------------------------ | ----------------------------------------------------------------------- |
 | **Go**     | [`mcp/protobuf/mcppb`](mcp/protobuf/README.md)                                 | `go get github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb` |
-| **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos==1.0.0`                            |
-| **Rust**   | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf)                        | `cargo add mcp-protobuf@1.0.0`                                          |
-| **TypeScript** | [`@machanirobotics/grpc-mcp-gateway-protos`](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos) | `npm install @machanirobotics/grpc-mcp-gateway-protos@1.0.0`        |
+| **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos==1.5.3`                            |
+| **Rust**   | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf)                        | `cargo add mcp-protobuf@1.5.3`                                          |
+| **TypeScript** | [`@machanirobotics/grpc-mcp-gateway-protos`](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos) | `npm install @machanirobotics/grpc-mcp-gateway-protos@1.5.3`        |
 
 **Python** ([PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/)) — Add to your project and import to register proto extensions:
 
@@ -106,13 +106,13 @@ import mcp.protobuf.annotations_pb2  # noqa: F401
 
 ```toml
 [dependencies]
-mcp-protobuf = "1.0.0"   # or cargo add mcp-protobuf for latest
+mcp-protobuf = "1.5.3"   # or cargo add mcp-protobuf for latest
 ```
 
 **TypeScript** ([npm](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos)) — Depends on `@protobuf-ts/runtime`; pin the package version to the same [release](https://github.com/machanirobotics/grpc-mcp-gateway/releases) as your gateway:
 
 ```bash
-npm install @machanirobotics/grpc-mcp-gateway-protos@1.0.0
+npm install @machanirobotics/grpc-mcp-gateway-protos@1.5.3
 ```
 
 ## Quick Start
