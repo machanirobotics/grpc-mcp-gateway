@@ -4,7 +4,6 @@
 [![PyPI](https://img.shields.io/pypi/v/grpc-mcp-gateway-protos?logo=python&label=PyPI)](https://pypi.org/project/grpc-mcp-gateway-protos)
 [![Go Reference](https://pkg.go.dev/badge/github.com/machanirobotics/grpc-mcp-gateway.svg)](https://pkg.go.dev/github.com/machanirobotics/grpc-mcp-gateway)
 [![Crates.io](https://img.shields.io/crates/v/mcp-protobuf?logo=rust&label=crates.io)](https://crates.io/crates/mcp-protobuf)
-[![npm](https://img.shields.io/npm/v/%40machanirobotics%2Fgrpc-mcp-gateway-protos?logo=npm&label=npm)](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos)
 [![BSR](https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue)](https://buf.build/machanirobotics/grpc-mcp-gateway)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -24,7 +23,7 @@ A `protoc` plugin and runtime that turns any gRPC service into a fully spec-comp
 - **Elicitation** — Generate confirmation dialogs before tool execution via `(mcp.protobuf.elicitation)`
 - **Transports** — stdio, SSE, and streamable-http — run multiple concurrently in a single process
 - **gRPC Gateway** — Forward MCP tool calls to a remote gRPC server (Go)
-- **Published Protos** — Import annotations from [`buf.build/machanirobotics/grpc-mcp-gateway`](https://buf.build/machanirobotics/grpc-mcp-gateway), or install pre-compiled types from [PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/) / [crates.io](https://crates.io/crates/mcp-protobuf) / [npm](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos)
+- **Published Protos** — Import annotations from [`buf.build/machanirobotics/grpc-mcp-gateway`](https://buf.build/machanirobotics/grpc-mcp-gateway), or install pre-compiled types from [PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/) / [crates.io](https://crates.io/crates/mcp-protobuf)
 
 | Language   | Generated File                     | Example                              |
 | ---------- | ---------------------------------- | ------------------------------------ |
@@ -93,7 +92,6 @@ The MCP annotation types (`mcp.protobuf.*`) are published as pre-compiled librar
 | **Go**     | [`mcp/protobuf/mcppb`](mcp/protobuf/README.md)                                 | `go get github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb` |
 | **Python** | [`grpc-mcp-gateway-protos`](https://pypi.org/project/grpc-mcp-gateway-protos/) | `pip install grpc-mcp-gateway-protos==1.5.3`                            |
 | **Rust**   | [`mcp-protobuf`](https://crates.io/crates/mcp-protobuf)                        | `cargo add mcp-protobuf@1.5.3`                                          |
-| **TypeScript** | [`@machanirobotics/grpc-mcp-gateway-protos`](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos) | `npm install @machanirobotics/grpc-mcp-gateway-protos@1.5.3`        |
 
 **Python** ([PyPI](https://pypi.org/project/grpc-mcp-gateway-protos/)) — Add to your project and import to register proto extensions:
 
@@ -107,12 +105,6 @@ import mcp.protobuf.annotations_pb2  # noqa: F401
 ```toml
 [dependencies]
 mcp-protobuf = "1.5.3"   # or cargo add mcp-protobuf for latest
-```
-
-**TypeScript** ([npm](https://www.npmjs.com/package/@machanirobotics/grpc-mcp-gateway-protos)) — Depends on `@protobuf-ts/runtime`; pin the package version to the same [release](https://github.com/machanirobotics/grpc-mcp-gateway/releases) as your gateway:
-
-```bash
-npm install @machanirobotics/grpc-mcp-gateway-protos@1.5.3
 ```
 
 ## Quick Start
@@ -378,8 +370,7 @@ grpc-mcp-gateway/
 ├── mcp/protobuf/                  # Pre-compiled proto libraries
 │   ├── mcppb/                     # Go (.pb.go) — see [mcp/protobuf/README.md](mcp/protobuf/README.md)
 │   ├── python/                    # Python (PyPI: grpc-mcp-gateway-protos)
-│   ├── rust/                      # Rust (crates.io: mcp-protobuf)
-│   └── typescript/                # TypeScript (npm: @machanirobotics/grpc-mcp-gateway-protos)
+│   └── rust/                      # Rust (crates.io: mcp-protobuf)
 ├── runtime/                       # Go runtime — [README](runtime/README.md)
 ├── plugin/
 │   ├── cmd/protoc-gen-mcp/        # Plugin binary (go install target)

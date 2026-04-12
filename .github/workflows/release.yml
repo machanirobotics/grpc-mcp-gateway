@@ -30,7 +30,6 @@ jobs:
             exit 1
           fi
           echo "VERSION=$TAG" >> "$GITHUB_ENV"
-          echo "VERSION_SEMVER=${TAG#v}" >> "$GITHUB_ENV"
 
       - name: Run tests
         run: |
@@ -132,18 +131,13 @@ jobs:
 
             **Python (pre-compiled proto types):**
             ```bash
-            pip install grpc-mcp-gateway-protos==${{ env.VERSION_SEMVER }}
+            pip install grpc-mcp-gateway-protos==${{ env.VERSION }}
             ```
 
             **Rust (pre-compiled proto types):**
             ```toml
             [dependencies]
-            mcp-protobuf = "${{ env.VERSION_SEMVER }}"
-            ```
-
-            **TypeScript / Node (pre-compiled proto types):**
-            ```bash
-            npm install @machanirobotics/grpc-mcp-gateway-protos@${{ env.VERSION_SEMVER }}
+            mcp-protobuf = "${{ env.VERSION }}"
             ```
 
             **Download binary:**
@@ -218,43 +212,8 @@ jobs:
         env:
           CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
 
-  publish-npm:
-    name: Publish to npm
-    runs-on: ubuntu-latest
-    needs: release
-    environment: release
-    permissions:
-      contents: read
-      id-token: write
-    steps:
-      - uses: actions/checkout@v6
-
-      - name: Stamp version from tag
-        run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          sed -i 's/"version": "[^"]*"/"version": "'"$VERSION"'"/' mcp/protobuf/typescript/package.json
-
-      - uses: oven-sh/setup-bun@v2
-
-      - name: Install & verify (Bun)
-        working-directory: mcp/protobuf/typescript
-        run: |
-          bun install --frozen-lockfile
-          bun run check
-          bun run lint
-
-      # Trusted publishing (OIDC): Bun does not support npm OIDC yet; npm publish only here. Node 24+ / npm 11.5.1+.
-      - uses: actions/setup-node@v6
-        with:
-          node-version: "24"
-          registry-url: "https://registry.npmjs.org"
-
-      - name: Publish to npm (npm CLI for OIDC)
-        working-directory: mcp/protobuf/typescript
-        run: npm publish --access public
-
   update-docs:
-    name: Sync protobuf package versions & docs
+    name: Update docs with release version
     runs-on: ubuntu-latest
     needs: release
     permissions:
@@ -270,40 +229,26 @@ jobs:
 
       - uses: astral-sh/setup-uv@v7
 
-      - uses: oven-sh/setup-bun@v2
-
       - name: Bump package versions and README pins
         run: |
           VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "Syncing protobuf packages and docs to $VERSION (from tag ${{ github.ref_name }})"
+          echo "Updating docs to version $VERSION"
 
-          # Published package manifests (stay aligned with GitHub release / PyPI / crates.io / npm)
-          sed -i 's/^version = .*/version = "'"$VERSION"'"/' mcp/protobuf/python/pyproject.toml
-          sed -i 's/^version = "[^"]*"/version = "'"$VERSION"'"/' mcp/protobuf/rust/Cargo.toml
-          sed -i 's/"version": "[^"]*"/"version": "'"$VERSION"'"/' mcp/protobuf/typescript/package.json
-
-          # Root README — Cargo.toml example, PyPI pin, npm pin, cargo add pin
+          # Main README - mcp-protobuf Cargo version
           sed -i 's/mcp-protobuf = "[^"]*"/mcp-protobuf = "'"$VERSION"'"/' README.md
-          sed -i 's/grpc-mcp-gateway-protos==[0-9][0-9.]*/grpc-mcp-gateway-protos=='"$VERSION"'/g' README.md
-          sed -i 's/@machanirobotics\/grpc-mcp-gateway-protos@[0-9][0-9.]*/@machanirobotics\/grpc-mcp-gateway-protos@'"$VERSION"'/g' README.md
-          sed -i 's/cargo add mcp-protobuf@[0-9][0-9.]*/cargo add mcp-protobuf@'"$VERSION"'/g' README.md
 
-          # Python package README
-          sed -i 's/grpc-mcp-gateway-protos==[0-9][0-9.]*/grpc-mcp-gateway-protos=='"$VERSION"'/g' mcp/protobuf/python/README.md
+          # Python README - pip install version
+          sed -i 's/grpc-mcp-gateway-protos==[0-9]\+\.[0-9]\+\.[0-9]\+/grpc-mcp-gateway-protos=='"$VERSION"'/' mcp/protobuf/python/README.md
+          sed -i 's/v[0-9]\+\.[0-9]\+\.[0-9]\+/v'"$VERSION"'/' mcp/protobuf/python/README.md
 
-          # Rust package README
+          # Rust README - mcp-protobuf Cargo version
           sed -i 's/mcp-protobuf = "[^"]*"/mcp-protobuf = "'"$VERSION"'"/' mcp/protobuf/rust/README.md
-
-          # TypeScript package README
-          sed -i 's/@machanirobotics\/grpc-mcp-gateway-protos@[0-9][0-9.]*/@machanirobotics\/grpc-mcp-gateway-protos@'"$VERSION"'/g' mcp/protobuf/typescript/README.md
 
       - name: Refresh lockfiles
         run: |
           (cd mcp/protobuf/python && uv lock)
           # Refresh only lock metadata for the bumped crate version (avoid full resolve churn from generate-lockfile)
           (cd mcp/protobuf/rust && cargo check)
-          (cd mcp/protobuf/typescript && bun install)
-
       - name: Commit and push
         run: |
           git config user.name "github-actions[bot]"
@@ -315,13 +260,10 @@ jobs:
             mcp/protobuf/python/README.md \
             mcp/protobuf/rust/Cargo.toml \
             mcp/protobuf/rust/Cargo.lock \
-            mcp/protobuf/rust/README.md \
-            mcp/protobuf/typescript/package.json \
-            mcp/protobuf/typescript/bun.lock \
-            mcp/protobuf/typescript/README.md
+            mcp/protobuf/rust/README.md
           if git diff --staged --quiet; then
-            echo "No version or doc changes needed"
+            echo "No doc changes needed"
           else
-            git commit -m "chore: sync protobuf package versions for ${{ github.ref_name }}"
+            git commit -m "docs: update version references to ${{ github.ref_name }}"
             git push
           fi

@@ -116,16 +116,3 @@ jobs:
       - name: Cargo check
         working-directory: mcp/protobuf/rust
         run: cargo check
-
-  proto-typescript:
-    name: Check proto lib (TypeScript)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: oven-sh/setup-bun@v2
-      - name: Install, tsc, Biome (mcp/protobuf/typescript; Bun only)
-        working-directory: mcp/protobuf/typescript
-        run: |
-          bun install --frozen-lockfile
-          bun run check
-          bun run lint
