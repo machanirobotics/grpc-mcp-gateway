@@ -16,7 +16,7 @@ path = "lib.rs"
 [dependencies]
 axum = "0.8"
 cxx = "1"
-rmcp = { version = "0.16", features = [
+rmcp = { version = "1.4", features = [
     "server",
     "transport-io",
     "transport-streamable-http-server",
