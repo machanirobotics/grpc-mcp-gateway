@@ -8,7 +8,7 @@ dependencies = [
     "googleapis-common-protos>=1.74.0",
     "grpc-mcp-gateway-protos",
     "grpcio>=1.78.0",
-    "grpcio-reflection>=1.78.0",
+    "grpcio-reflection>=1.80.0",
     "mcp>=1.27.0",
     "protobuf>=7.34.1",
     "pytest>=9.0.2",
