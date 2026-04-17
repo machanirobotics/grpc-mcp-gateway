@@ -19,6 +19,9 @@ from google.protobuf.json_format import MessageToDict, ParseDict
 {{- range $key, $val := .SchemaJSON }}
 {{ $key }}_SCHEMA = json.loads(r'''{{ $val }}''')
 {{- end }}
+{{- range .ElicitationSchemas }}
+{{ .Name }}_ELICITATION_SCHEMA = json.loads(r'''{{ .SchemaJSON }}''')
+{{- end }}
 
 {{ range $key, $val := .SchemaJSON }}
 {{ $key }}_TOOL = types.Tool(
@@ -163,7 +166,7 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
                         "type": "object",
                         "properties": {
                         {{- range $tool.MethodOpts.Elicitation.Fields }}
-                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
+                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range $i, $e := .EnumValues }}{{ if $i }}, {{ end }}"{{ $e }}"{{ end }}]{{ end }}},
                         {{- end }}
                         },
                         "required": [{{ range $tool.MethodOpts.Elicitation.Fields }}{{ if .Required }}"{{ .Name }}", {{ end }}{{ end }}],
@@ -343,7 +346,7 @@ def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ 
                         "type": "object",
                         "properties": {
                         {{- range $tool.MethodOpts.Elicitation.Fields }}
-                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range .EnumValues }}"{{ . }}", {{ end }}]{{ end }}},
+                            "{{ .Name }}": {"type": "{{ .Type }}", "description": "{{ escapeQuotes .Description }}"{{ if .EnumValues }}, "enum": [{{ range $i, $e := .EnumValues }}{{ if $i }}, {{ end }}"{{ $e }}"{{ end }}]{{ end }}},
                         {{- end }}
                         },
                         "required": [{{ range $tool.MethodOpts.Elicitation.Fields }}{{ if .Required }}"{{ .Name }}", {{ end }}{{ end }}],
