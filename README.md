@@ -1,13 +1,51 @@
 # grpc-mcp-gateway
 
-[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go)](https://go.dev/)
-[![PyPI](https://img.shields.io/pypi/v/grpc-mcp-gateway-protos?logo=python&label=PyPI)](https://pypi.org/project/grpc-mcp-gateway-protos)
-[![Go Reference](https://pkg.go.dev/badge/github.com/machanirobotics/grpc-mcp-gateway.svg)](https://pkg.go.dev/github.com/machanirobotics/grpc-mcp-gateway)
-[![Crates.io](https://img.shields.io/crates/v/mcp-protobuf?logo=rust&label=crates.io)](https://crates.io/crates/mcp-protobuf)
-[![BSR](https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue)](https://buf.build/machanirobotics/grpc-mcp-gateway)
-[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/f624e503-8b62-4954-b496-ec1d4fbaf0ef" width="314" height="314" />
+</p>
 
-**gRPC to MCP proxy generator following the [MCP Specification](https://modelcontextprotocol.io/specification).**
+<p align="center">
+  <strong>gRPC ↔ MCP Bridge</strong> — Generate MCP servers directly from protobufs<br>
+  enabling seamless AI-native interfaces for existing services
+</p>
+
+<p align="center">
+  <a href="https://go.dev/">
+    <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go" />
+  </a>
+  <a href="https://pypi.org/project/grpc-mcp-gateway-protos">
+    <img src="https://img.shields.io/pypi/v/grpc-mcp-gateway-protos?logo=python&label=PyPI" />
+  </a>
+  <a href="https://pkg.go.dev/github.com/machanirobotics/grpc-mcp-gateway">
+    <img src="https://pkg.go.dev/badge/github.com/machanirobotics/grpc-mcp-gateway.svg" />
+  </a>
+  <a href="https://crates.io/crates/mcp-protobuf">
+    <img src="https://img.shields.io/crates/v/mcp-protobuf?logo=rust&label=crates.io" />
+  </a>
+  <a href="https://buf.build/machanirobotics/grpc-mcp-gateway">
+    <img src="https://img.shields.io/badge/BSR-buf.build%2Fmachanirobotics%2Fgrpc--mcp--gateway-blue" />
+  </a>
+</p>
+
+## Overview
+
+**grpc-mcp-gateway** is a `protoc` plugin and runtime that automatically
+converts your gRPC services into MCP-compatible servers.
+
+**gRPC → MCP proxy generator following the [MCP Specification](https://modelcontextprotocol.io/specification).**
+
+Instead of rewriting APIs for AI systems, you can expose your existing
+gRPC infrastructure as:
+
+- **Tools** → callable functions for agents  
+- **Prompts** → structured interaction templates  
+- **Resources** → retrievable context/data  
+- **Elicitation** → dynamic input flows  
+
+Built with a **spec-first approach**, it ensures full compliance with the
+Model Context Protocol while keeping your system strongly typed and scalable.
+
+Open-sourced by **Machani Robotics**, this project bridges traditional backend systems with AI-native platforms.
 
 A `protoc` plugin and runtime that turns any gRPC service into a fully spec-compliant [Model Context Protocol](https://modelcontextprotocol.io/) server — tools, prompts, resources, and elicitation — in Go, Python, Rust, and C++.
 
