@@ -23,7 +23,7 @@ static std::string _mcp_error_json(const std::string& msg) {
     return "{\"error\":\"" + escaped + "\"}";
 }
 
-static std::string _mcp_msg_to_json(const ::google::protobuf::Message& msg) {
+[[maybe_unused]] static std::string _mcp_msg_to_json(const ::google::protobuf::Message& msg) {
     std::string json;
     ::google::protobuf::util::JsonPrintOptions opts;
     opts.preserve_proto_field_names = true;

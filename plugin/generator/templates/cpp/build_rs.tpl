@@ -15,7 +15,14 @@ fn main() {
 
     for entry in glob::glob(&format!("{gen_root}/**/*.pb.cc")).expect("glob") {
         if let Ok(path) = entry {
-            build.file(&path);
+            let path_str = path.to_string_lossy();
+            let is_grpc = path_str.ends_with(".grpc.pb.cc");
+            // Only compile gRPC implementation files for service protos.
+            // Many support protos generate empty *.grpc.pb.cc units and trigger ranlib "no symbols" warnings.
+            let keep = !is_grpc || path_str.ends_with("_service.grpc.pb.cc");
+            if keep {
+                build.file(&path);
+            }
         }
     }
 

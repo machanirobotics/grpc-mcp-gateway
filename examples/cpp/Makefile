@@ -39,6 +39,9 @@ rust:
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Darwin)
+  MACOSX_DEPLOYMENT_TARGET ?= 26.4
+  export MACOSX_DEPLOYMENT_TARGET
+  CXXFLAGS += -mmacosx-version-min=$(MACOSX_DEPLOYMENT_TARGET)
   RUST_LDFLAGS := -framework CoreFoundation -framework Security -framework SystemConfiguration
 else
   RUST_LDFLAGS :=
