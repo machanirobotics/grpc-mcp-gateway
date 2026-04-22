@@ -10,7 +10,6 @@ import json
 from typing import Iterator, Protocol
 
 import mcp.types as types
-from mcp.server.fastmcp import FastMCP
 from mcp.server.lowlevel import Server
 from google.protobuf.json_format import MessageToDict, ParseDict
 
