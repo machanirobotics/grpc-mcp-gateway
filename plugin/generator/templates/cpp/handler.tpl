@@ -8,6 +8,7 @@ use std::sync::Arc;
 use rmcp::{ErrorData as McpError, RoleServer, ServerHandler, ServiceExt, model::*, service::RequestContext};
 use serde_json::{self, json, Value};
 
+#[allow(dead_code)]
 fn make_tool(name: &str, description: &str, schema_json: &str) -> Tool {
     serde_json::from_value(json!({
         "name": name, "description": description,
@@ -20,6 +21,7 @@ const {{ $info.ConstName }}_SCHEMA_JSON: &str = r##"{{ index $.SchemaJSON (print
 {{- end }}
 
 pub struct {{ $svcName }}McpHandler {
+    #[allow(dead_code)]
     inner: cxx::UniquePtr<crate::ffi_{{ $svcName | snakeCase }}::{{ $svcName }}McpImpl>,
 }
 
@@ -50,27 +52,29 @@ impl ServerHandler for {{ $svcName }}McpHandler {
             .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
     }
 
-    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
+    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> std::result::Result<ListToolsResult, McpError> {
         Ok(ListToolsResult::with_all_items(Self::tools()))
     }
 
-    async fn call_tool(&self, request: CallToolRequestParams, _: RequestContext<RoleServer>) -> Result<CallToolResult, McpError> {
+    async fn call_tool(&self, request: CallToolRequestParams, _: RequestContext<RoleServer>) -> std::result::Result<CallToolResult, McpError> {
         let args = request.arguments.map_or_else(|| Value::Object(Default::default()), Value::Object);
-        let args_json = serde_json::to_string(&args)
+        let _args_json = serde_json::to_string(&args)
             .map_err(|e| McpError::internal_error(format!("serialize args: {e}"), None))?;
-        let result_json = match request.name.as_ref() {
+        match request.name.as_ref() {
         {{- range $methName, $info := $methods }}
-            "{{ $info.ToolName }}" => self.inner.{{ $info.CppMethodName }}(&args_json),
+            "{{ $info.ToolName }}" => {
+                let result_json = self.inner.{{ $info.CppMethodName }}(&_args_json);
+                Ok(CallToolResult::success(vec![Content::text(result_json)]))
+            }
         {{- end }}
-            _ => return Err(McpError::internal_error(format!("unknown tool: {}", request.name), None)),
-        };
-        Ok(CallToolResult::success(vec![Content::text(result_json)]))
+            _ => Err(McpError::internal_error(format!("unknown tool: {}", request.name), None)),
+        }
     }
 }
 
 pub const {{ $svcName | screamingSnakeCase }}_MCP_DEFAULT_BASE_PATH: &str = "{{ index $.ServiceBasePaths $svcName }}";
 
-pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio() -> Result<(), Box<dyn std::error::Error>> {
+pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio() -> std::result::Result<(), Box<dyn std::error::Error>> {
     let handler = {{ $svcName }}McpHandler::new();
     handler.serve(rmcp::transport::stdio()).await?.waiting().await?;
     Ok(())
@@ -78,7 +82,7 @@ pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio() -> Result<(), Box<dyn 
 
 pub async fn serve_{{ $svcName | snakeCase }}_mcp(
     host: &str, port: u16, base_path: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let handler = {{ $svcName }}McpHandler::new();
     use rmcp::transport::streamable_http_server::{
         StreamableHttpServerConfig, StreamableHttpService, session::local::LocalSessionManager,

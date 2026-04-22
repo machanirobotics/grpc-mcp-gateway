@@ -103,7 +103,7 @@ generate-cpp:
         --cpp_out=examples/proto/generated/cpp \
         --grpc_out=examples/proto/generated/cpp \
         --plugin=protoc-gen-grpc=`which grpc_cpp_plugin` \
-        /tmp/proto_export/mcp/protobuf/*.proto /tmp/proto_export/google/api/*.proto /tmp/proto_export/todo/v1/*.proto
+        /tmp/proto_export/mcp/protobuf/*.proto /tmp/proto_export/google/api/*.proto /tmp/proto_export/todo/v1/*.proto /tmp/proto_export/counter/v1/*.proto
 
 # Build C++ example with Bazel
 build-cpp-bazel:
