@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import json
-from typing import Iterator, Protocol
+from typing import Protocol
 
 import mcp.types as types
 from mcp.server.lowlevel import Server
