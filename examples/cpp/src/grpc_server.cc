@@ -109,3 +109,13 @@ void start_grpc_server(const std::string& addr) {
 
 }  // namespace v1
 }  // namespace todo
+
+namespace counter {
+namespace v1 {
+
+void start_grpc_server(const std::string& addr) {
+    ::todo::v1::start_grpc_server(addr);
+}
+
+}  // namespace v1
+}  // namespace counter

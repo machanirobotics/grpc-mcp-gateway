@@ -3,7 +3,7 @@
 # Run: make (from examples/cpp/)
 
 CXX ?= g++
-CXXFLAGS ?= -std=c++17 -O2 -Wall
+CXXFLAGS ?= -std=c++17 -O2 -Wall -Wno-deprecated-declarations
 
 CPP_DIR := $(CURDIR)
 GEN_DIR := $(CPP_DIR)/../proto/generated/cpp

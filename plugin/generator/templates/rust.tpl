@@ -44,7 +44,7 @@ const {{ $info.ConstName }}_SCHEMA_JSON: &str = r##"{{ index $.SchemaJSON (print
 pub trait {{ $svcName }}McpServer: Send + Sync + 'static {
 {{- range $methName, $info := $methods }}
 {{- if not $info.StreamProgress }}
-    async fn {{ $info.RsMethodName }}(&self, args: Value) -> Result<Value, McpError>;
+    async fn {{ $info.RsMethodName }}(&self, args: Value) -> std::result::Result<Value, McpError>;
 {{- end }}
 {{- end }}
 }
@@ -195,11 +195,11 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
         .with_server_info(Implementation::new("{{ $svcName }}", "0.1.0"))
     }
 
-    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListToolsResult, McpError> {
+    async fn list_tools(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> std::result::Result<ListToolsResult, McpError> {
         Ok(ListToolsResult::with_all_items(Self::tools()))
     }
 
-    async fn call_tool(&self, request: CallToolRequestParams, context: RequestContext<RoleServer>) -> Result<CallToolResult, McpError> {
+    async fn call_tool(&self, request: CallToolRequestParams, context: RequestContext<RoleServer>) -> std::result::Result<CallToolResult, McpError> {
         let args = request.arguments.map_or_else(|| Value::Object(Default::default()), Value::Object);
         match request.name.as_ref() {
         {{- range $methName, $info := $methods }}
@@ -242,11 +242,11 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
     }
 {{- if $hasPrompts }}
 
-    async fn list_prompts(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListPromptsResult, McpError> {
+    async fn list_prompts(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> std::result::Result<ListPromptsResult, McpError> {
         Ok(ListPromptsResult::with_all_items(Self::prompts()))
     }
 
-    async fn get_prompt(&self, request: GetPromptRequestParams, _: RequestContext<RoleServer>) -> Result<GetPromptResult, McpError> {
+    async fn get_prompt(&self, request: GetPromptRequestParams, _: RequestContext<RoleServer>) -> std::result::Result<GetPromptResult, McpError> {
         for p in Self::prompts() {
             if p.name == request.name {
                 let arg_str: String = request.arguments.as_ref()
@@ -266,7 +266,7 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
 {{- end }}
 {{- if $hasPromptCompletions }}
 
-    async fn complete(&self, request: CompleteRequestParams, _: RequestContext<RoleServer>) -> Result<CompleteResult, McpError> {
+    async fn complete(&self, request: CompleteRequestParams, _: RequestContext<RoleServer>) -> std::result::Result<CompleteResult, McpError> {
         let key = match request.r#ref {
             Reference::Prompt(prompt_ref) => format!("{}:{}", prompt_ref.name, request.argument.name),
             _ => {
@@ -288,15 +288,15 @@ impl<T: {{ $svcName }}McpServer> ServerHandler for {{ $svcName }}McpHandler<T> {
 {{- end }}
 {{- if $hasResources }}
 
-    async fn list_resources(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListResourcesResult, McpError> {
+    async fn list_resources(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> std::result::Result<ListResourcesResult, McpError> {
         Ok(ListResourcesResult::with_all_items(Self::resources()))
     }
 
-    async fn list_resource_templates(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> Result<ListResourceTemplatesResult, McpError> {
+    async fn list_resource_templates(&self, _: Option<PaginatedRequestParams>, _: RequestContext<RoleServer>) -> std::result::Result<ListResourceTemplatesResult, McpError> {
         Ok(ListResourceTemplatesResult::with_all_items(Self::resource_templates()))
     }
 
-    async fn read_resource(&self, request: ReadResourceRequestParams, _: RequestContext<RoleServer>) -> Result<ReadResourceResult, McpError> {
+    async fn read_resource(&self, request: ReadResourceRequestParams, _: RequestContext<RoleServer>) -> std::result::Result<ReadResourceResult, McpError> {
 {{- if and $svcOpts $svcOpts.App }}
         let app_uri = app_resource_uri("{{ $svcName }}");
         if request.uri == app_uri {
@@ -327,7 +327,7 @@ impl Default for {{ $svcName }}McpTransportConfig {
     }
 }
 
-pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio<T: {{ $svcName }}McpServer>(svc: T) -> Result<(), Box<dyn std::error::Error>> {
+pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio<T: {{ $svcName }}McpServer>(svc: T) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let handler = {{ $svcName }}McpHandler::new(svc);
     handler.serve(rmcp::transport::stdio()).await?.waiting().await?;
     Ok(())
@@ -335,7 +335,7 @@ pub async fn serve_{{ $svcName | snakeCase }}_mcp_stdio<T: {{ $svcName }}McpServ
 
 pub async fn serve_{{ $svcName | snakeCase }}_mcp<T: {{ $svcName }}McpServer>(
     svc: T, config: {{ $svcName }}McpTransportConfig,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let handler = {{ $svcName }}McpHandler::new(svc);
     let transports: Vec<&str> = config.transport.split(',').map(|s| s.trim()).filter(|s| !s.is_empty()).collect();
     let has_stdio = transports.iter().any(|t| *t == "stdio");
