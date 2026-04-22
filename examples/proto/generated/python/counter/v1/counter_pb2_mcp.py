@@ -7,7 +7,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any, Iterator, Protocol
+from typing import Iterator, Protocol
 
 import mcp.types as types
 from mcp.server.fastmcp import FastMCP
