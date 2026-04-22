@@ -12,7 +12,7 @@ from typing import Any, Iterator, Protocol
 import mcp.types as types
 from mcp.server.fastmcp import FastMCP
 from mcp.server.lowlevel import Server
-from google.protobuf.json_format import MessageToDict, ParseDict
+from google.protobuf.json_format import ParseDict
 
 
 CreateTodoRequest_ELICITATION_SCHEMA = json.loads(r'''{"type":"object","properties":{"parent":{"type":"string","description":"Parent resource name (e.g. users/alice). The todo will be created under this user."},"todo":{"type":"string","description":"The todo item to create."},"todo_id":{"type":"string","description":"Unique ID for the todo (e.g. abc123). Becomes the final segment of the resource name."}},"required":["parent","todo","todo_id"]}''')
