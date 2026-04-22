@@ -11,7 +11,7 @@ from typing import Protocol
 
 import mcp.types as types
 from mcp.server.lowlevel import Server
-from google.protobuf.json_format import MessageToDict, ParseDict
+from google.protobuf.json_format import ParseDict
 
 
 CountRequest_ELICITATION_SCHEMA = json.loads(r'''{"type":"object","properties":{"to":{"type":"integer","description":"Count from 0 up to this number. Progress updates are sent each step."}}}''')
