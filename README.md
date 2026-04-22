@@ -142,7 +142,7 @@ import mcp.protobuf.annotations_pb2  # noqa: F401
 
 ```toml
 [dependencies]
-mcp-protobuf = "1.5.6"   # or cargo add mcp-protobuf for latest
+mcp-protobuf = "1.5.61"   # or cargo add mcp-protobuf for latest
 ```
 
 ## Quick Start

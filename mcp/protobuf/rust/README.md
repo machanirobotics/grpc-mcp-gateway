@@ -14,7 +14,7 @@ Or add to `Cargo.toml` (replace with the version from the latest release):
 
 ```toml
 [dependencies]
-mcp-protobuf = "1.5.6"   # check crates.io for latest
+mcp-protobuf = "1.5.61"   # check crates.io for latest
 ```
 
 ## What's included

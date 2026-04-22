@@ -11,7 +11,7 @@ Use the version matching the [grpc-mcp-gateway release](https://github.com/macha
 pip install grpc-mcp-gateway-protos
 
 # Or pin to a specific release (matches gateway / GitHub release tag without v)
-pip install grpc-mcp-gateway-protos==1.5.6
+pip install grpc-mcp-gateway-protos==1.5.61
 ```
 
 ## What's included
