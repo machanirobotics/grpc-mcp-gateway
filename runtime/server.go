@@ -60,6 +60,11 @@ type MCPServerConfig struct {
 	// WriteTimeout is the maximum duration before timing out writes of the response. Zero means no limit.
 	// For progress-enabled tools, keep at 0 so streaming progress notifications do not time out.
 	WriteTimeout time.Duration
+	// Stateless puts the StreamableHTTP transport in stateless mode.
+	// In stateless mode the server does not track sessions; every POST is handled
+	// with a temporary session and GET requests return 405 per the MCP spec.
+	// Defaults to false (stateful, GET SSE enabled).
+	Stateless bool
 }
 
 // NewMCPServer creates an mcp.Server from a MCPServerConfig.
@@ -170,7 +175,12 @@ func buildHTTPMux(server *mcp.Server, cfg *MCPServerConfig, transports []Transpo
 	for _, t := range transports {
 		switch t {
 		case TransportStreamableHTTP:
-			h := mcp.NewStreamableHTTPHandler(func(_ *http.Request) *mcp.Server { return server }, cfg.StreamableHTTPOptions)
+			opts := mcp.StreamableHTTPOptions{}
+			if cfg.StreamableHTTPOptions != nil {
+				opts = *cfg.StreamableHTTPOptions
+			}
+			opts.Stateless = cfg.Stateless
+			h := mcp.NewStreamableHTTPHandler(func(_ *http.Request) *mcp.Server { return server }, &opts)
 			mux.Handle(cfg.BasePath, h)
 		case TransportSSE:
 			h := mcp.NewSSEHandler(func(_ *http.Request) *mcp.Server { return server }, cfg.SSEOptions)

@@ -74,18 +74,19 @@ transports := runtime.ParseTransports(os.Getenv("MCP_TRANSPORT"))
 
 ### MCPServerConfig
 
-| Field                 | Description                                      |
-| --------------------- | ------------------------------------------------ |
-| `Name`                | MCP server name (reported to clients)            |
-| `Version`             | Server version                                   |
-| `Transport` / `Transports` | Single or multiple transports                 |
-| `Addr`                | Listen address for HTTP (default `:8080`)        |
-| `BasePath`            | HTTP path prefix (default `/mcp`)                |
-| `GeneratedBasePath`   | Proto-derived path (takes precedence)           |
-| `HeaderMappings`      | HTTP header → gRPC metadata forwarding          |
-| `ReadTimeout`         | Max duration for reading request (0 = no limit)  |
-| `WriteTimeout`        | Max duration for writing response (0 = no limit; keep 0 for progress) |
-| `OnReady`             | Callback before server starts                    |
+| Field | Description |
+| --- | --- |
+| `Name` | MCP server name (reported to clients) |
+| `Version` | Server version |
+| `Transport` / `Transports` | Single or multiple transports |
+| `Addr` | Listen address for HTTP (default `:8080`) |
+| `BasePath` | HTTP path prefix (default `/mcp`) |
+| `GeneratedBasePath` | Proto-derived path (takes precedence) |
+| `HeaderMappings` | HTTP header → gRPC metadata forwarding |
+| `ReadTimeout` | Max duration for reading request (0 = no limit) |
+| `WriteTimeout` | Max duration for writing response (0 = no limit; keep 0 for progress) |
+| `Stateless` | If true, disables session tracking; GET returns 405. Default false (stateful, GET SSE enabled) |
+| `OnReady` | Callback before server starts |
 
 ### Header forwarding
 
