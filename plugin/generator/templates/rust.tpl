@@ -24,6 +24,14 @@ fn make_tool_with_app_meta(name: &str, description: &str, schema_json: &str, app
     })).expect("generated tool schema must be valid")
 }
 
+fn make_tool_with_ui_meta(name: &str, description: &str, schema_json: &str, ui_resource_uri: &str) -> Tool {
+    serde_json::from_value(json!({
+        "name": name, "description": description,
+        "inputSchema": serde_json::from_str::<Value>(schema_json).unwrap(),
+        "_meta": { "ui": { "resourceUri": ui_resource_uri } }
+    })).expect("generated tool schema must be valid")
+}
+
 fn app_resource_uri(service_name: &str) -> String {
     format!("ui://{}/app.html", service_name.to_lowercase())
 }
@@ -65,7 +73,9 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
         vec![
         {{- range $methName, $info := $methods }}
         {{- if not $info.StreamProgress }}
-{{- if and $svcOpts $svcOpts.App }}
+{{- if and $info.MethodOpts $info.MethodOpts.UI }}
+            make_tool_with_ui_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, "{{ $info.MethodOpts.UI.ResourceURI }}"),
+{{- else if and $svcOpts $svcOpts.App }}
             make_tool_with_app_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, &app_uri),
 {{- else }}
             make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),
@@ -81,7 +91,9 @@ impl<T: {{ $svcName }}McpServer> {{ $svcName }}McpHandler<T> {
 {{- end }}
         vec![
         {{- range $methName, $info := $methods }}
-{{- if and $svcOpts $svcOpts.App }}
+{{- if and $info.MethodOpts $info.MethodOpts.UI }}
+            make_tool_with_ui_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, "{{ $info.MethodOpts.UI.ResourceURI }}"),
+{{- else if and $svcOpts $svcOpts.App }}
             make_tool_with_app_meta("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON, &app_uri),
 {{- else }}
             make_tool("{{ $info.ToolName }}", "{{ $info.Description | rsEscape }}", {{ $info.ConstName }}_SCHEMA_JSON),

@@ -67,6 +67,15 @@ func ExtractMethodOptions(meth *protogen.Method) *MCPMethodOpts {
 		hasAnything = true
 	}
 
+	// mcp.protobuf.ui — UI metadata for MCP Apps
+	uiExt, ok := proto.GetExtension(opts, mcppb.E_Ui).(*mcppb.MCPUIOptions)
+	if ok && uiExt != nil {
+		result.UI = &MCPUIOpts{
+			ResourceURI: uiExt.GetResourceUri(),
+		}
+		hasAnything = true
+	}
+
 	if !hasAnything {
 		return nil
 	}

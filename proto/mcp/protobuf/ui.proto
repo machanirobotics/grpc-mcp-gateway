@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package mcp.protobuf;
+
+option go_package = "github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppb";
+option java_multiple_files = true;
+option java_outer_classname = "UIProto";
+option java_package = "com.mcp.protobuf";
+
+// MCPUIOptions configures UI metadata for an individual RPC method.
+// Used to declare that a tool supports MCP Apps and specify the UI resource.
+message MCPUIOptions {
+  // The URI of the UI resource to render for this tool.
+  // MUST use the `ui://` URI scheme to distinguish UI resources from other MCP resource types.
+  // Example: "ui://weather-dashboard"
+  string resource_uri = 1;
+}
+
+// MCPUIResourceCsp defines Content Security Policy configuration for UI resources.
+// Servers declare which external origins their UI needs to access.
+// Hosts use this to enforce appropriate CSP headers.
+message MCPUIResourceCsp {
+  // Origins for network requests (fetch/XHR/WebSocket).
+  // Empty or omitted = no external connections (secure default).
+  // Maps to CSP `connect-src` directive.
+  // Example: ["https://api.weather.com", "wss://realtime.service.com"]
+  repeated string connect_domains = 1;
+
+  // Origins for static resources (images, scripts, stylesheets, fonts, media).
+  // Empty or omitted = no external resources (secure default).
+  // Wildcard subdomains supported: "https://*.example.com"
+  // Maps to CSP `img-src`, `script-src`, `style-src`, `font-src`, `media-src` directives.
+  // Example: ["https://cdn.jsdelivr.net", "https://*.cloudflare.com"]
+  repeated string resource_domains = 2;
+
+  // Origins for nested iframes.
+  // Empty or omitted = no nested iframes allowed (`frame-src 'none'`).
+  // Maps to CSP `frame-src` directive.
+  // Example: ["https://www.youtube.com", "https://player.vimeo.com"]
+  repeated string frame_domains = 3;
+
+  // Allowed base URIs for the document.
+  // Empty or omitted = only same origin allowed (`base-uri 'self'`).
+  // Maps to CSP `base-uri` directive.
+  // Example: ["https://cdn.example.com"]
+  repeated string base_uri_domains = 4;
+}
+
+// MCPUIPermissions defines sandbox permissions requested by the UI.
+// Servers declare which browser capabilities their UI needs.
+// Hosts MAY honor these by setting appropriate iframe `allow` attributes.
+// Apps SHOULD NOT assume permissions are granted; use JS feature detection as fallback.
+message MCPUIPermissions {
+  // Request camera access.
+  // Maps to Permission Policy `camera` feature.
+  bool camera = 1;
+
+  // Request microphone access.
+  // Maps to Permission Policy `microphone` feature.
+  bool microphone = 2;
+
+  // Request geolocation access.
+  // Maps to Permission Policy `geolocation` feature.
+  bool geolocation = 3;
+
+  // Request clipboard write access.
+  // Maps to Permission Policy `clipboard-write` feature.
+  bool clipboard_write = 4;
+}
+
+// MCPUIResourceMeta defines UI resource metadata for security and rendering configuration.
+// This metadata may be provided on either the resource listing (resources/list) or on each
+// content item (resources/read). When provided on both, the content item value takes precedence.
+message MCPUIResourceMeta {
+  // Content Security Policy configuration.
+  MCPUIResourceCsp csp = 1;
+
+  // Sandbox permissions requested by the UI.
+  MCPUIPermissions permissions = 2;
+
+  // Dedicated origin for view.
+  // Optional domain for the view's sandbox origin. Useful when views need stable, dedicated
+  // origins for OAuth callbacks, CORS policies, or API key allowlists.
+  //
+  // Host-dependent: The format and validation rules for this field are determined by each host.
+  // Servers MUST consult host-specific documentation for the expected domain format.
+  // Common patterns include:
+  // - Hash-based subdomains (e.g., "{hash}.claudemcpcontent.com")
+  // - URL-derived subdomains (e.g., "www-example-com.oaiusercontent.com")
+  //
+  // If omitted, Host uses default sandbox origin (typically per-conversation).
+  string domain = 3;
+
+  // Visual boundary preference.
+  // Boolean controlling whether a visible border and background is provided by the host.
+  // Specifying an explicit value is recommended because hosts' defaults may vary.
+  // - true: Request visible border + background
+  // - false: Request no visible border + background
+  // - omitted: host decides border
+  bool prefers_border = 4;
+}

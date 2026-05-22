@@ -88,7 +88,9 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- if $tool.StreamProgress }}
 	{
 		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
-{{- if and $svcOpts $svcOpts.App }}
+{{- if and $tool.MethodOpts $tool.MethodOpts.UI }}
+			tool = runtime.SetToolUIMeta(tool, "{{ $tool.MethodOpts.UI.ResourceURI }}", "", "", "", false)
+{{- else if and $svcOpts $svcOpts.App }}
 		tool = runtime.SetToolAppMeta(tool, appResourceURI)
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -164,7 +166,9 @@ func Register{{ $svcName }}MCPHandler(s *mcp.Server, srv {{ $svcName }}MCPServer
 {{- else }}
 	{
 		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
-{{- if and $svcOpts $svcOpts.App }}
+{{- if and $tool.MethodOpts $tool.MethodOpts.UI }}
+			tool = runtime.SetToolUIMeta(tool, "{{ $tool.MethodOpts.UI.ResourceURI }}", "", "", "", false)
+{{- else if and $svcOpts $svcOpts.App }}
 		tool = runtime.SetToolAppMeta(tool, appResourceURI)
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {
@@ -327,7 +331,9 @@ func ForwardTo{{ $svcName }}MCPClient(s *mcp.Server, client {{ $svcName }}MCPCli
 {{- range $methName, $tool := $methods }}
 	{
 		tool := runtime.PrepareToolWithExtras({{ $svcName }}_{{ $methName }}Tool, cfg.ExtraProperties)
-{{- if and $svcOpts $svcOpts.App }}
+{{- if and $tool.MethodOpts $tool.MethodOpts.UI }}
+			tool = runtime.SetToolUIMeta(tool, "{{ $tool.MethodOpts.UI.ResourceURI }}", "", "", "", false)
+{{- else if and $svcOpts $svcOpts.App }}
 		tool = runtime.SetToolAppMeta(tool, appResourceURI)
 {{- end }}
 		s.AddTool(tool, func(ctx context.Context, req *mcp.CallToolRequest) (*mcp.CallToolResult, error) {

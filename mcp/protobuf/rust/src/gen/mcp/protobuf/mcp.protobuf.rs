@@ -20,6 +20,103 @@ pub struct McpServiceOptions {
     #[prost(message, optional, tag="1")]
     pub app: ::core::option::Option<McpApp>,
 }
+/// MCPUIOptions configures UI metadata for an individual RPC method.
+/// Used to declare that a tool supports MCP Apps and specify the UI resource.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpuiOptions {
+    /// The URI of the UI resource to render for this tool.
+    /// MUST use the `ui://` URI scheme to distinguish UI resources from other MCP resource types.
+    /// Example: "ui://weather-dashboard"
+    #[prost(string, tag="1")]
+    pub resource_uri: ::prost::alloc::string::String,
+}
+/// MCPUIResourceCsp defines Content Security Policy configuration for UI resources.
+/// Servers declare which external origins their UI needs to access.
+/// Hosts use this to enforce appropriate CSP headers.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpuiResourceCsp {
+    /// Origins for network requests (fetch/XHR/WebSocket).
+    /// Empty or omitted = no external connections (secure default).
+    /// Maps to CSP `connect-src` directive.
+    /// Example: \["<https://api.weather.com",> "wss://realtime.service.com"\]
+    #[prost(string, repeated, tag="1")]
+    pub connect_domains: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Origins for static resources (images, scripts, stylesheets, fonts, media).
+    /// Empty or omitted = no external resources (secure default).
+    /// Wildcard subdomains supported: "<https://*.example.com">
+    /// Maps to CSP `img-src`, `script-src`, `style-src`, `font-src`, `media-src` directives.
+    /// Example: \["<https://cdn.jsdelivr.net",> "<https://*.cloudflare.com"\]>
+    #[prost(string, repeated, tag="2")]
+    pub resource_domains: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Origins for nested iframes.
+    /// Empty or omitted = no nested iframes allowed (`frame-src 'none'`).
+    /// Maps to CSP `frame-src` directive.
+    /// Example: \["<https://www.youtube.com",> "<https://player.vimeo.com"\]>
+    #[prost(string, repeated, tag="3")]
+    pub frame_domains: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+    /// Allowed base URIs for the document.
+    /// Empty or omitted = only same origin allowed (`base-uri 'self'`).
+    /// Maps to CSP `base-uri` directive.
+    /// Example: \["<https://cdn.example.com"\]>
+    #[prost(string, repeated, tag="4")]
+    pub base_uri_domains: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
+}
+/// MCPUIPermissions defines sandbox permissions requested by the UI.
+/// Servers declare which browser capabilities their UI needs.
+/// Hosts MAY honor these by setting appropriate iframe `allow` attributes.
+/// Apps SHOULD NOT assume permissions are granted; use JS feature detection as fallback.
+#[derive(Clone, Copy, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpuiPermissions {
+    /// Request camera access.
+    /// Maps to Permission Policy `camera` feature.
+    #[prost(bool, tag="1")]
+    pub camera: bool,
+    /// Request microphone access.
+    /// Maps to Permission Policy `microphone` feature.
+    #[prost(bool, tag="2")]
+    pub microphone: bool,
+    /// Request geolocation access.
+    /// Maps to Permission Policy `geolocation` feature.
+    #[prost(bool, tag="3")]
+    pub geolocation: bool,
+    /// Request clipboard write access.
+    /// Maps to Permission Policy `clipboard-write` feature.
+    #[prost(bool, tag="4")]
+    pub clipboard_write: bool,
+}
+/// MCPUIResourceMeta defines UI resource metadata for security and rendering configuration.
+/// This metadata may be provided on either the resource listing (resources/list) or on each
+/// content item (resources/read). When provided on both, the content item value takes precedence.
+#[derive(Clone, PartialEq, Eq, Hash, ::prost::Message)]
+pub struct McpuiResourceMeta {
+    /// Content Security Policy configuration.
+    #[prost(message, optional, tag="1")]
+    pub csp: ::core::option::Option<McpuiResourceCsp>,
+    /// Sandbox permissions requested by the UI.
+    #[prost(message, optional, tag="2")]
+    pub permissions: ::core::option::Option<McpuiPermissions>,
+    /// Dedicated origin for view.
+    /// Optional domain for the view's sandbox origin. Useful when views need stable, dedicated
+    /// origins for OAuth callbacks, CORS policies, or API key allowlists.
+    ///
+    /// Host-dependent: The format and validation rules for this field are determined by each host.
+    /// Servers MUST consult host-specific documentation for the expected domain format.
+    /// Common patterns include:
+    /// - Hash-based subdomains (e.g., "{hash}.claudemcpcontent.com")
+    /// - URL-derived subdomains (e.g., "www-example-com.oaiusercontent.com")
+    ///
+    /// If omitted, Host uses default sandbox origin (typically per-conversation).
+    #[prost(string, tag="3")]
+    pub domain: ::prost::alloc::string::String,
+    /// Visual boundary preference.
+    /// Boolean controlling whether a visible border and background is provided by the host.
+    /// Specifying an explicit value is recommended because hosts' defaults may vary.
+    /// - true: Request visible border + background
+    /// - false: Request no visible border + background
+    /// - omitted: host decides border
+    #[prost(bool, tag="4")]
+    pub prefers_border: bool,
+}
 /// MCPPrompt defines a reusable prompt template exposed at the service level.
 ///
 /// The arguments are defined as a proper proto message referenced by schema.
@@ -62,6 +159,10 @@ pub struct McpToolOptions {
     /// mcp.protobuf.MCPProgress and the result type.
     #[prost(bool, optional, tag="3")]
     pub progress: ::core::option::Option<bool>,
+    /// UI metadata for MCP Apps support.
+    /// When specified, this tool supports MCP Apps and will render the referenced UI resource.
+    #[prost(message, optional, tag="4")]
+    pub ui: ::core::option::Option<McpuiOptions>,
 }
 /// MCPElicitation defines a confirmation dialog shown to the user before
 /// a tool executes. Used as: option (mcp.protobuf.elicitation) = { ... };
@@ -287,5 +388,10 @@ pub struct McpResource {
     /// The MIME type of the resource content.
     #[prost(enumeration="McpMimeType", tag="5")]
     pub mime_type: i32,
+    /// Resource metadata for security and rendering configuration.
+    /// For UI resources (uri starting with "ui://"), this contains UI-specific metadata
+    /// including CSP configuration, permissions, and visual preferences.
+    #[prost(message, optional, tag="6")]
+    pub meta_ui: ::core::option::Option<McpuiResourceMeta>,
 }
 // @@protoc_insertion_point(module)

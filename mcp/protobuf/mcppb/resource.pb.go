@@ -33,7 +33,11 @@ type MCPResource struct {
 	// Description of what this resource provides.
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	// The MIME type of the resource content.
-	MimeType      MCPMimeType `protobuf:"varint,5,opt,name=mime_type,json=mimeType,proto3,enum=mcp.protobuf.MCPMimeType" json:"mime_type,omitempty"`
+	MimeType MCPMimeType `protobuf:"varint,5,opt,name=mime_type,json=mimeType,proto3,enum=mcp.protobuf.MCPMimeType" json:"mime_type,omitempty"`
+	// Resource metadata for security and rendering configuration.
+	// For UI resources (uri starting with "ui://"), this contains UI-specific metadata
+	// including CSP configuration, permissions, and visual preferences.
+	MetaUi        *MCPUIResourceMeta `protobuf:"bytes,6,opt,name=meta_ui,json=metaUi,proto3" json:"meta_ui,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -103,17 +107,25 @@ func (x *MCPResource) GetMimeType() MCPMimeType {
 	return MCPMimeType_MCP_MIME_TYPE_UNSPECIFIED
 }
 
+func (x *MCPResource) GetMetaUi() *MCPUIResourceMeta {
+	if x != nil {
+		return x.MetaUi
+	}
+	return nil
+}
+
 var File_mcp_protobuf_resource_proto protoreflect.FileDescriptor
 
 const file_mcp_protobuf_resource_proto_rawDesc = "" +
 	"\n" +
-	"\x1bmcp/protobuf/resource.proto\x12\fmcp.protobuf\x1a\x1cmcp/protobuf/mime_type.proto\"\xa7\x01\n" +
+	"\x1bmcp/protobuf/resource.proto\x12\fmcp.protobuf\x1a\x1cmcp/protobuf/mime_type.proto\x1a\x15mcp/protobuf/ui.proto\"\xe1\x01\n" +
 	"\vMCPResource\x12\x10\n" +
 	"\x03uri\x18\x01 \x01(\tR\x03uri\x12\x18\n" +
 	"\apattern\x18\x02 \x01(\tR\apattern\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x126\n" +
-	"\tmime_type\x18\x05 \x01(\x0e2\x19.mcp.protobuf.MCPMimeTypeR\bmimeTypeBc\n" +
+	"\tmime_type\x18\x05 \x01(\x0e2\x19.mcp.protobuf.MCPMimeTypeR\bmimeType\x128\n" +
+	"\ameta_ui\x18\x06 \x01(\v2\x1f.mcp.protobuf.MCPUIResourceMetaR\x06metaUiBc\n" +
 	"\x10com.mcp.protobufB\rResourceProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppbb\x06proto3"
 
 var (
@@ -130,16 +142,18 @@ func file_mcp_protobuf_resource_proto_rawDescGZIP() []byte {
 
 var file_mcp_protobuf_resource_proto_msgTypes = make([]protoimpl.MessageInfo, 1)
 var file_mcp_protobuf_resource_proto_goTypes = []any{
-	(*MCPResource)(nil), // 0: mcp.protobuf.MCPResource
-	(MCPMimeType)(0),    // 1: mcp.protobuf.MCPMimeType
+	(*MCPResource)(nil),       // 0: mcp.protobuf.MCPResource
+	(MCPMimeType)(0),          // 1: mcp.protobuf.MCPMimeType
+	(*MCPUIResourceMeta)(nil), // 2: mcp.protobuf.MCPUIResourceMeta
 }
 var file_mcp_protobuf_resource_proto_depIdxs = []int32{
 	1, // 0: mcp.protobuf.MCPResource.mime_type:type_name -> mcp.protobuf.MCPMimeType
-	1, // [1:1] is the sub-list for method output_type
-	1, // [1:1] is the sub-list for method input_type
-	1, // [1:1] is the sub-list for extension type_name
-	1, // [1:1] is the sub-list for extension extendee
-	0, // [0:1] is the sub-list for field type_name
+	2, // 1: mcp.protobuf.MCPResource.meta_ui:type_name -> mcp.protobuf.MCPUIResourceMeta
+	2, // [2:2] is the sub-list for method output_type
+	2, // [2:2] is the sub-list for method input_type
+	2, // [2:2] is the sub-list for extension type_name
+	2, // [2:2] is the sub-list for extension extendee
+	0, // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_mcp_protobuf_resource_proto_init() }
@@ -148,6 +162,7 @@ func file_mcp_protobuf_resource_proto_init() {
 		return
 	}
 	file_mcp_protobuf_mime_type_proto_init()
+	file_mcp_protobuf_ui_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{

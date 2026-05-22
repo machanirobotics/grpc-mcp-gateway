@@ -13,6 +13,7 @@ import "google/api/field_behavior.proto";
 import "google/protobuf/empty.proto";
 
 import "mcp/protobuf/annotations.proto";
+import "mcp/protobuf/ui.proto";
 import "todo/v1/todo.proto";
 
 // Service for managing todo items.
@@ -66,6 +67,9 @@ service TodoService {
     option (google.api.method_signature) = "parent";
     option (mcp.protobuf.tool) = {
       description: "Lists all todo items for a user. Supports pagination via page_size and page_token."
+    };
+    option (mcp.protobuf.ui) = {
+      resource_uri: "ui://todo-dashboard"
     };
     option (mcp.protobuf.prompt) = {
       name: "prioritize_todos"
