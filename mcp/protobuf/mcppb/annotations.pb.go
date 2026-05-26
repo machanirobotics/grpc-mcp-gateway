@@ -78,6 +78,14 @@ var file_mcp_protobuf_annotations_proto_extTypes = []protoimpl.ExtensionInfo{
 		Tag:           "bytes,51006,opt,name=enum_value",
 		Filename:      "mcp/protobuf/annotations.proto",
 	},
+	{
+		ExtendedType:  (*descriptorpb.MethodOptions)(nil),
+		ExtensionType: (*MCPUIOptions)(nil),
+		Field:         51007,
+		Name:          "mcp.protobuf.ui",
+		Tag:           "bytes,51007,opt,name=ui",
+		Filename:      "mcp/protobuf/annotations.proto",
+	},
 }
 
 // Extension fields to descriptorpb.ServiceOptions.
@@ -94,6 +102,8 @@ var (
 	E_Prompt = &file_mcp_protobuf_annotations_proto_extTypes[2]
 	// optional mcp.protobuf.MCPElicitation elicitation = 51003;
 	E_Elicitation = &file_mcp_protobuf_annotations_proto_extTypes[3]
+	// optional mcp.protobuf.MCPUIOptions ui = 51007;
+	E_Ui = &file_mcp_protobuf_annotations_proto_extTypes[7]
 )
 
 // Extension fields to descriptorpb.FieldOptions.
@@ -118,7 +128,7 @@ var File_mcp_protobuf_annotations_proto protoreflect.FileDescriptor
 
 const file_mcp_protobuf_annotations_proto_rawDesc = "" +
 	"\n" +
-	"\x1emcp/protobuf/annotations.proto\x12\fmcp.protobuf\x1a google/protobuf/descriptor.proto\x1a\"mcp/protobuf/service_options.proto\x1a\x19mcp/protobuf/prompt.proto\x1a\x1emcp/protobuf/elicitation.proto\x1a\x18mcp/protobuf/field.proto\x1a\x17mcp/protobuf/enum.proto:_\n" +
+	"\x1emcp/protobuf/annotations.proto\x12\fmcp.protobuf\x1a google/protobuf/descriptor.proto\x1a\"mcp/protobuf/service_options.proto\x1a\x19mcp/protobuf/prompt.proto\x1a\x1emcp/protobuf/elicitation.proto\x1a\x18mcp/protobuf/field.proto\x1a\x17mcp/protobuf/enum.proto\x1a\x15mcp/protobuf/ui.proto:_\n" +
 	"\aservice\x12\x1f.google.protobuf.ServiceOptions\x18\xb8\x8e\x03 \x01(\v2\x1f.mcp.protobuf.MCPServiceOptionsR\aservice\x88\x01\x01:U\n" +
 	"\x04tool\x12\x1e.google.protobuf.MethodOptions\x18\xb9\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPToolOptionsR\x04tool\x88\x01\x01:T\n" +
 	"\x06prompt\x12\x1e.google.protobuf.MethodOptions\x18\xba\x8e\x03 \x01(\v2\x17.mcp.protobuf.MCPPromptR\x06prompt\x88\x01\x01:c\n" +
@@ -126,7 +136,8 @@ const file_mcp_protobuf_annotations_proto_rawDesc = "" +
 	"\x05field\x12\x1d.google.protobuf.FieldOptions\x18\xbc\x8e\x03 \x01(\v2\x1d.mcp.protobuf.MCPFieldOptionsR\x05field\x88\x01\x01:S\n" +
 	"\x04enum\x12\x1c.google.protobuf.EnumOptions\x18\xbd\x8e\x03 \x01(\v2\x1c.mcp.protobuf.MCPEnumOptionsR\x04enum\x88\x01\x01:h\n" +
 	"\n" +
-	"enum_value\x12!.google.protobuf.EnumValueOptions\x18\xbe\x8e\x03 \x01(\v2!.mcp.protobuf.MCPEnumValueOptionsR\tenumValue\x88\x01\x01Bf\n" +
+	"enum_value\x12!.google.protobuf.EnumValueOptions\x18\xbe\x8e\x03 \x01(\v2!.mcp.protobuf.MCPEnumValueOptionsR\tenumValue\x88\x01\x01:O\n" +
+	"\x02ui\x12\x1e.google.protobuf.MethodOptions\x18\xbf\x8e\x03 \x01(\v2\x1a.mcp.protobuf.MCPUIOptionsR\x02ui\x88\x01\x01Bf\n" +
 	"\x10com.mcp.protobufB\x10AnnotationsProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppbb\x06proto3"
 
 var file_mcp_protobuf_annotations_proto_goTypes = []any{
@@ -142,6 +153,7 @@ var file_mcp_protobuf_annotations_proto_goTypes = []any{
 	(*MCPFieldOptions)(nil),               // 9: mcp.protobuf.MCPFieldOptions
 	(*MCPEnumOptions)(nil),                // 10: mcp.protobuf.MCPEnumOptions
 	(*MCPEnumValueOptions)(nil),           // 11: mcp.protobuf.MCPEnumValueOptions
+	(*MCPUIOptions)(nil),                  // 12: mcp.protobuf.MCPUIOptions
 }
 var file_mcp_protobuf_annotations_proto_depIdxs = []int32{
 	0,  // 0: mcp.protobuf.service:extendee -> google.protobuf.ServiceOptions
@@ -151,17 +163,19 @@ var file_mcp_protobuf_annotations_proto_depIdxs = []int32{
 	2,  // 4: mcp.protobuf.field:extendee -> google.protobuf.FieldOptions
 	3,  // 5: mcp.protobuf.enum:extendee -> google.protobuf.EnumOptions
 	4,  // 6: mcp.protobuf.enum_value:extendee -> google.protobuf.EnumValueOptions
-	5,  // 7: mcp.protobuf.service:type_name -> mcp.protobuf.MCPServiceOptions
-	6,  // 8: mcp.protobuf.tool:type_name -> mcp.protobuf.MCPToolOptions
-	7,  // 9: mcp.protobuf.prompt:type_name -> mcp.protobuf.MCPPrompt
-	8,  // 10: mcp.protobuf.elicitation:type_name -> mcp.protobuf.MCPElicitation
-	9,  // 11: mcp.protobuf.field:type_name -> mcp.protobuf.MCPFieldOptions
-	10, // 12: mcp.protobuf.enum:type_name -> mcp.protobuf.MCPEnumOptions
-	11, // 13: mcp.protobuf.enum_value:type_name -> mcp.protobuf.MCPEnumValueOptions
-	14, // [14:14] is the sub-list for method output_type
-	14, // [14:14] is the sub-list for method input_type
-	7,  // [7:14] is the sub-list for extension type_name
-	0,  // [0:7] is the sub-list for extension extendee
+	1,  // 7: mcp.protobuf.ui:extendee -> google.protobuf.MethodOptions
+	5,  // 8: mcp.protobuf.service:type_name -> mcp.protobuf.MCPServiceOptions
+	6,  // 9: mcp.protobuf.tool:type_name -> mcp.protobuf.MCPToolOptions
+	7,  // 10: mcp.protobuf.prompt:type_name -> mcp.protobuf.MCPPrompt
+	8,  // 11: mcp.protobuf.elicitation:type_name -> mcp.protobuf.MCPElicitation
+	9,  // 12: mcp.protobuf.field:type_name -> mcp.protobuf.MCPFieldOptions
+	10, // 13: mcp.protobuf.enum:type_name -> mcp.protobuf.MCPEnumOptions
+	11, // 14: mcp.protobuf.enum_value:type_name -> mcp.protobuf.MCPEnumValueOptions
+	12, // 15: mcp.protobuf.ui:type_name -> mcp.protobuf.MCPUIOptions
+	16, // [16:16] is the sub-list for method output_type
+	16, // [16:16] is the sub-list for method input_type
+	8,  // [8:16] is the sub-list for extension type_name
+	0,  // [0:8] is the sub-list for extension extendee
 	0,  // [0:0] is the sub-list for field type_name
 }
 
@@ -175,6 +189,7 @@ func file_mcp_protobuf_annotations_proto_init() {
 	file_mcp_protobuf_elicitation_proto_init()
 	file_mcp_protobuf_field_proto_init()
 	file_mcp_protobuf_enum_proto_init()
+	file_mcp_protobuf_ui_proto_init()
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
@@ -182,7 +197,7 @@ func file_mcp_protobuf_annotations_proto_init() {
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_mcp_protobuf_annotations_proto_rawDesc), len(file_mcp_protobuf_annotations_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   0,
-			NumExtensions: 7,
+			NumExtensions: 8,
 			NumServices:   0,
 		},
 		GoTypes:           file_mcp_protobuf_annotations_proto_goTypes,

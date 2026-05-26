@@ -7,6 +7,8 @@ option java_multiple_files = true;
 option java_outer_classname = "PromptProto";
 option java_package = "com.mcp.protobuf";
 
+import "mcp/protobuf/ui.proto";
+
 // MCPPrompt defines a reusable prompt template exposed at the service level.
 //
 // The arguments are defined as a proper proto message referenced by schema.
@@ -42,4 +44,7 @@ message MCPToolOptions {
   // execution. Requires a server-streaming RPC whose response has a oneof with
   // mcp.protobuf.MCPProgress and the result type.
   optional bool progress = 3;
+  // UI metadata for MCP Apps support.
+  // When specified, this tool supports MCP Apps and will render the referenced UI resource.
+  MCPUIOptions ui = 4;
 }

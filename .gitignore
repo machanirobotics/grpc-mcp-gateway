@@ -206,3 +206,6 @@ mcp/protobuf/rust/target/package/mcp-protobuf-1.5.0/src/lib.rs
 mcp/protobuf/rust/target/package/mcp-protobuf-1.5.0/src/gen/mcp/protobuf/mcp.protobuf.rs
 mcp/protobuf/rust/target/package/tmp-crate/mcp-protobuf-0.1.0.crate
 mcp/protobuf/rust/target/package/tmp-crate/mcp-protobuf-1.5.0.crate
+examples/proto/generated
+examples/proto/generated/cpp
+

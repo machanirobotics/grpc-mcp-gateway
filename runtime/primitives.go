@@ -76,7 +76,6 @@ func DefaultResourceHandler() func(context.Context, *mcp.ReadResourceRequest) (*
 	}
 }
 
-
 // AppResourceURI returns the canonical ui:// resource URI for a service app.
 func AppResourceURI(serviceName string) string {
 	return fmt.Sprintf("ui://%s/app.html", strings.ToLower(serviceName))
@@ -90,6 +89,58 @@ func SetToolAppMeta(tool *mcp.Tool, resourceURI string) *mcp.Tool {
 		"ui": map[string]any{
 			"resourceUri": resourceURI,
 		},
+	}
+	return &cloned
+}
+
+// SetToolUIMeta returns a shallow clone of tool with full _meta.ui metadata set,
+// including resourceUri, csp, permissions, domain, and prefersBorder.
+func SetToolUIMeta(tool *mcp.Tool, resourceURI string, csp, permissions, domain string, prefersBorder bool) *mcp.Tool {
+	cloned := *tool
+	uiMeta := map[string]any{
+		"resourceUri": resourceURI,
+	}
+	if csp != "" {
+		var cspObj map[string]any
+		if err := json.Unmarshal([]byte(csp), &cspObj); err == nil {
+			uiMeta["csp"] = cspObj
+		}
+	}
+	if permissions != "" {
+		var permObj map[string]any
+		if err := json.Unmarshal([]byte(permissions), &permObj); err == nil {
+			uiMeta["permissions"] = permObj
+		}
+	}
+	if domain != "" {
+		uiMeta["domain"] = domain
+	}
+	uiMeta["prefersBorder"] = prefersBorder
+	cloned.Meta = mcp.Meta{
+		"ui": uiMeta,
+	}
+	return &cloned
+}
+
+// SetToolUIMetaFromStruct returns a shallow clone of tool with full _meta.ui metadata set,
+// using structured parameters for CSP, permissions, etc.
+func SetToolUIMetaFromStruct(tool *mcp.Tool, resourceURI string, csp, permissions map[string]any, domain string, prefersBorder bool) *mcp.Tool {
+	cloned := *tool
+	uiMeta := map[string]any{
+		"resourceUri": resourceURI,
+	}
+	if len(csp) > 0 {
+		uiMeta["csp"] = csp
+	}
+	if len(permissions) > 0 {
+		uiMeta["permissions"] = permissions
+	}
+	if domain != "" {
+		uiMeta["domain"] = domain
+	}
+	uiMeta["prefersBorder"] = prefersBorder
+	cloned.Meta = mcp.Meta{
+		"ui": uiMeta,
 	}
 	return &cloned
 }
@@ -125,6 +176,55 @@ func DefaultAppResourceHandler(appName, version, description string) func(contex
 			},
 		}, nil
 	}
+}
+
+// SetResourceUIMeta returns a shallow clone of resource contents with _meta.ui metadata set.
+func SetResourceUIMeta(contents *mcp.ResourceContents, csp, permissions, domain string, prefersBorder bool) *mcp.ResourceContents {
+	cloned := *contents
+	if cloned.Meta == nil {
+		cloned.Meta = make(mcp.Meta)
+	}
+	uiMeta := make(map[string]any)
+	if csp != "" {
+		var cspObj map[string]any
+		if err := json.Unmarshal([]byte(csp), &cspObj); err == nil {
+			uiMeta["csp"] = cspObj
+		}
+	}
+	if permissions != "" {
+		var permObj map[string]any
+		if err := json.Unmarshal([]byte(permissions), &permObj); err == nil {
+			uiMeta["permissions"] = permObj
+		}
+	}
+	if domain != "" {
+		uiMeta["domain"] = domain
+	}
+	uiMeta["prefersBorder"] = prefersBorder
+	cloned.Meta["ui"] = uiMeta
+	return &cloned
+}
+
+// SetResourceUIMetaFromStruct returns a shallow clone of resource contents with _meta.ui metadata set,
+// using structured parameters for CSP, permissions, etc.
+func SetResourceUIMetaFromStruct(contents *mcp.ResourceContents, csp, permissions map[string]any, domain string, prefersBorder bool) *mcp.ResourceContents {
+	cloned := *contents
+	if cloned.Meta == nil {
+		cloned.Meta = make(mcp.Meta)
+	}
+	uiMeta := make(map[string]any)
+	if len(csp) > 0 {
+		uiMeta["csp"] = csp
+	}
+	if len(permissions) > 0 {
+		uiMeta["permissions"] = permissions
+	}
+	if domain != "" {
+		uiMeta["domain"] = domain
+	}
+	uiMeta["prefersBorder"] = prefersBorder
+	cloned.Meta["ui"] = uiMeta
+	return &cloned
 }
 
 // CompletionHandlerFromEnums builds a CompletionHandler that serves autocomplete

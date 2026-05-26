@@ -111,7 +111,10 @@ type MCPToolOptions struct {
 	// progressToken in params._meta; the server will send progress updates during
 	// execution. Requires a server-streaming RPC whose response has a oneof with
 	// mcp.protobuf.MCPProgress and the result type.
-	Progress      *bool `protobuf:"varint,3,opt,name=progress,proto3,oneof" json:"progress,omitempty"`
+	Progress *bool `protobuf:"varint,3,opt,name=progress,proto3,oneof" json:"progress,omitempty"`
+	// UI metadata for MCP Apps support.
+	// When specified, this tool supports MCP Apps and will render the referenced UI resource.
+	Ui            *MCPUIOptions `protobuf:"bytes,4,opt,name=ui,proto3" json:"ui,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -167,19 +170,27 @@ func (x *MCPToolOptions) GetProgress() bool {
 	return false
 }
 
+func (x *MCPToolOptions) GetUi() *MCPUIOptions {
+	if x != nil {
+		return x.Ui
+	}
+	return nil
+}
+
 var File_mcp_protobuf_prompt_proto protoreflect.FileDescriptor
 
 const file_mcp_protobuf_prompt_proto_rawDesc = "" +
 	"\n" +
-	"\x19mcp/protobuf/prompt.proto\x12\fmcp.protobuf\"Y\n" +
+	"\x19mcp/protobuf/prompt.proto\x12\fmcp.protobuf\x1a\x15mcp/protobuf/ui.proto\"Y\n" +
 	"\tMCPPrompt\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x16\n" +
-	"\x06schema\x18\x03 \x01(\tR\x06schema\"t\n" +
+	"\x06schema\x18\x03 \x01(\tR\x06schema\"\xa0\x01\n" +
 	"\x0eMCPToolOptions\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
 	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x1f\n" +
-	"\bprogress\x18\x03 \x01(\bH\x00R\bprogress\x88\x01\x01B\v\n" +
+	"\bprogress\x18\x03 \x01(\bH\x00R\bprogress\x88\x01\x01\x12*\n" +
+	"\x02ui\x18\x04 \x01(\v2\x1a.mcp.protobuf.MCPUIOptionsR\x02uiB\v\n" +
 	"\t_progressBa\n" +
 	"\x10com.mcp.protobufB\vPromptProtoP\x01Z>github.com/machanirobotics/grpc-mcp-gateway/mcp/protobuf/mcppbb\x06proto3"
 
@@ -199,13 +210,15 @@ var file_mcp_protobuf_prompt_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_mcp_protobuf_prompt_proto_goTypes = []any{
 	(*MCPPrompt)(nil),      // 0: mcp.protobuf.MCPPrompt
 	(*MCPToolOptions)(nil), // 1: mcp.protobuf.MCPToolOptions
+	(*MCPUIOptions)(nil),   // 2: mcp.protobuf.MCPUIOptions
 }
 var file_mcp_protobuf_prompt_proto_depIdxs = []int32{
-	0, // [0:0] is the sub-list for method output_type
-	0, // [0:0] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	2, // 0: mcp.protobuf.MCPToolOptions.ui:type_name -> mcp.protobuf.MCPUIOptions
+	1, // [1:1] is the sub-list for method output_type
+	1, // [1:1] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_mcp_protobuf_prompt_proto_init() }
@@ -213,6 +226,7 @@ func file_mcp_protobuf_prompt_proto_init() {
 	if File_mcp_protobuf_prompt_proto != nil {
 		return
 	}
+	file_mcp_protobuf_ui_proto_init()
 	file_mcp_protobuf_prompt_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{

@@ -8,6 +8,7 @@ option java_outer_classname = "ResourceProto";
 option java_package = "com.mcp.protobuf";
 
 import "mcp/protobuf/mime_type.proto";
+import "mcp/protobuf/ui.proto";
 
 // MCPResource describes a data source exposed by an MCP server.
 message MCPResource {
@@ -21,4 +22,8 @@ message MCPResource {
   string description = 4;
   // The MIME type of the resource content.
   MCPMimeType mime_type = 5;
+  // Resource metadata for security and rendering configuration.
+  // For UI resources (uri starting with "ui://"), this contains UI-specific metadata
+  // including CSP configuration, permissions, and visual preferences.
+  MCPUIResourceMeta meta_ui = 6;
 }

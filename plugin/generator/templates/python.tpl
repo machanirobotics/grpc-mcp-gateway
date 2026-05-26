@@ -52,6 +52,12 @@ def _tool_with_app_meta(tool: types.Tool, app_resource_uri: str) -> types.Tool:
         return tool.model_copy(update={"meta": meta})
     return tool.copy(deep=True, update={"meta": meta})
 
+def _tool_with_ui_meta(tool: types.Tool, resource_uri: str) -> types.Tool:
+    meta = {"ui": {"resourceUri": resource_uri}}
+    if hasattr(tool, "model_copy"):
+        return tool.model_copy(update={"meta": meta})
+    return tool.copy(deep=True, update={"meta": meta})
+
 {{- range $svcName, $methods := .Services }}
 
 class {{ $svcName }}MCPServer(Protocol):
@@ -84,6 +90,14 @@ class {{ $svcName }}MCPClient(Protocol):
     {{ $svcName }}_{{ $methName }}_TOOL,
 {{- end }}
 ]
+
+{{ $svcName }}_TOOL_UI_META: dict[str, str] = {
+{{- range $methName, $tool := $methods }}
+{{- if and $tool.MethodOpts $tool.MethodOpts.UI }}
+    "{{ $svcName }}_{{ $methName }}_TOOL": "{{ $tool.MethodOpts.UI.ResourceURI }}",
+{{- end }}
+{{- end }}
+}
 {{- end }}
 
 {{- range $svcName, $methods := .Services }}
@@ -148,11 +162,24 @@ def register_{{ $svcName | snakeCase }}_mcp_handler(server: Server, impl: {{ $sv
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
+        tools = []
+        for tool in {{ $svcName }}_TOOLS:
 {{- if and $svcOpts $svcOpts.App }}
-        return [_tool_with_app_meta(t, _app_resource_uri_value) for t in {{ $svcName }}_TOOLS]
-{{- else }}
-        return {{ $svcName }}_TOOLS
+            # Apply service-level app meta if no tool-specific UI meta
+            if tool.name not in {{ $svcName }}_TOOL_UI_META:
+                tools.append(_tool_with_app_meta(tool, _app_resource_uri_value))
+            else:
 {{- end }}
+                # Apply tool-specific UI meta if available
+                if tool.name in {{ $svcName }}_TOOL_UI_META:
+                    tools.append(_tool_with_ui_meta(tool, {{ $svcName }}_TOOL_UI_META[tool.name]))
+                else:
+                    tools.append(tool)
+{{- if and $svcOpts $svcOpts.App }}
+            else:
+                tools.append(tool)
+{{- end }}
+        return tools
 
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:
@@ -328,11 +355,24 @@ def forward_to_{{ $svcName | snakeCase }}_mcp_client(server: Server, client: {{ 
 
     @server.list_tools()
     async def handle_list_tools() -> list[types.Tool]:
+        tools = []
+        for tool in {{ $svcName }}_TOOLS:
 {{- if and $svcOpts $svcOpts.App }}
-        return [_tool_with_app_meta(t, _app_resource_uri_value) for t in {{ $svcName }}_TOOLS]
-{{- else }}
-        return {{ $svcName }}_TOOLS
+            # Apply service-level app meta if no tool-specific UI meta
+            if tool.name not in {{ $svcName }}_TOOL_UI_META:
+                tools.append(_tool_with_app_meta(tool, _app_resource_uri_value))
+            else:
 {{- end }}
+                # Apply tool-specific UI meta if available
+                if tool.name in {{ $svcName }}_TOOL_UI_META:
+                    tools.append(_tool_with_ui_meta(tool, {{ $svcName }}_TOOL_UI_META[tool.name]))
+                else:
+                    tools.append(tool)
+{{- if and $svcOpts $svcOpts.App }}
+            else:
+                tools.append(tool)
+{{- end }}
+        return tools
 
     @server.call_tool()
     async def handle_call_tool(name: str, arguments: dict[str, Any]) -> list[types.TextContent]:

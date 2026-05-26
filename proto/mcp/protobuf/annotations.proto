@@ -13,6 +13,7 @@ import "mcp/protobuf/prompt.proto";
 import "mcp/protobuf/elicitation.proto";
 import "mcp/protobuf/field.proto";
 import "mcp/protobuf/enum.proto";
+import "mcp/protobuf/ui.proto";
 
 // Attach MCP service options (app, prompts, resources) to a gRPC service.
 extend google.protobuf.ServiceOptions {
@@ -47,4 +48,9 @@ extend google.protobuf.EnumOptions {
 // Attach a description to an enum value (for MCP tool schema).
 extend google.protobuf.EnumValueOptions {
   optional MCPEnumValueOptions enum_value = 51006;
+}
+
+// Attach UI metadata to a single RPC method for MCP Apps support.
+extend google.protobuf.MethodOptions {
+  optional MCPUIOptions ui = 51007;
 }

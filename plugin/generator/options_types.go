@@ -12,6 +12,7 @@ type MCPMethodOpts struct {
 	ToolDescription string
 	Prompt          *MCPPromptOpts
 	Elicitation     *MCPElicitationOpts
+	UI              *MCPUIOpts
 }
 
 // MCPAppOpts mirrors MCPApp for templates.
@@ -47,6 +48,7 @@ type MCPResourceOpts struct {
 	Name        string
 	Description string
 	MimeType    string
+	MetaUI      *MCPUIResourceMetaOpts
 }
 
 // MCPElicitationOpts mirrors MCPElicitation for templates.
@@ -65,4 +67,33 @@ type MCPElicitFieldOpts struct {
 	Type           string
 	EnumValues     []string // friendly lowercased names shown in the elicitation form
 	EnumProtoNames []string // proto enum names, parallel to EnumValues, used for reverse-mapping after elicitation
+}
+
+// MCPUIOpts mirrors MCPUIOptions for templates.
+type MCPUIOpts struct {
+	ResourceURI string
+}
+
+// MCPUIResourceCspOpts mirrors MCPUIResourceCsp for templates.
+type MCPUIResourceCspOpts struct {
+	ConnectDomains  []string
+	ResourceDomains []string
+	FrameDomains    []string
+	BaseURIDomains  []string
+}
+
+// MCPUIPermissionsOpts mirrors MCPUIPermissions for templates.
+type MCPUIPermissionsOpts struct {
+	Camera         bool
+	Microphone     bool
+	Geolocation    bool
+	ClipboardWrite bool
+}
+
+// MCPUIResourceMetaOpts mirrors MCPUIResourceMeta for templates.
+type MCPUIResourceMetaOpts struct {
+	CSP           *MCPUIResourceCspOpts
+	Permissions   *MCPUIPermissionsOpts
+	Domain        string
+	PrefersBorder bool
 }
