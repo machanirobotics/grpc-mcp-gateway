@@ -54,6 +54,23 @@ jobs:
           cd plugin && go test ./...
           cd ../examples && go test ./...
 
+  bazel:
+    name: Build & Test (Bazel)
+    runs-on: blacksmith-4vcpu-ubuntu-2404
+    steps:
+      - uses: actions/checkout@v6
+      - uses: bazel-contrib/setup-bazel@0.19.0
+        with:
+          # Cache the bazelisk download, the repository cache (external deps),
+          # and the disk cache (build outputs) keyed per workflow.
+          bazelisk-cache: true
+          disk-cache: ${{ github.workflow }}
+          repository-cache: true
+      - name: Bazel build
+        run: bazel build //...
+      - name: Bazel test
+        run: bazel test //... --test_output=errors
+
   python:
     name: Check (Python)
     runs-on: blacksmith-4vcpu-ubuntu-2404
@@ -90,7 +107,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          python-version: "3.12"
+          python-version: '3.12'
       - name: Build & verify imports
         working-directory: mcp/protobuf/python
         run: |
